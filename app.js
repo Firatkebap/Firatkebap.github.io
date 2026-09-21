@@ -2,7 +2,6 @@ const cats = document.getElementById("cats");
 const root = document.getElementById("menu");
 const zoom = document.getElementById("zoom");
 const zoomImg = document.getElementById("zoomImg");
-const swipeHint = document.getElementById("swipeHint");
 
 let menuData = null;
 let lang = localStorage.getItem("fk_lang") === "en" ? "en" : "tr";
@@ -76,7 +75,6 @@ function render(data) {
   setLine(document.getElementById("foot"), txt(menuData, "note"));
   document.title = txt(menuData, "name") || "Menu";
   cats.setAttribute("aria-label", lang === "en" ? "Categories" : "Kategoriler");
-  swipeHint.textContent = lang === "en" ? "Swipe for the next menu" : "Sonraki menü için kaydır";
   syncLangButtons();
 
   cats.innerHTML = "";

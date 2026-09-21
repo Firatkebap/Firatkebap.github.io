@@ -129,15 +129,6 @@ body {
   border-color: #fff;
 }
 
-.swipe-hint {
-  flex: none;
-  text-align: center;
-  color: #666;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  padding: 0 1rem 0.35rem;
-}
-
 #menu {
   flex: 1;
   min-height: 0;
