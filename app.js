@@ -42,7 +42,7 @@ function render(data) {
       const row = document.createElement("article");
       row.className = item.image ? "item with-photo" : "item";
       const photo = item.image
-        ? `<img class="dish" src="${escapeHtml(item.image)}" alt="" />`
+        ? `<img class="dish" src="${escapeHtml(mediaUrl(item.image))}" alt="" />`
         : "";
       row.innerHTML = `
         ${photo}

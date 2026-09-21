@@ -227,11 +227,20 @@ button,
 
 .mini button,
 .mini label.file {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.7rem;
+}
+
+.mini button {
   background: transparent;
   border: 1px solid var(--line);
   color: var(--paper);
-  font-size: 0.78rem;
-  padding: 0.35rem 0.7rem;
+}
+
+.mini label.file {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #fff;
 }
 
 .danger {

@@ -12,32 +12,61 @@ function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
 }
 
-function compress(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const max = 900;
-      let w = img.width;
-      let h = img.height;
-      if (Math.max(w, h) > max) {
-        const s = max / Math.max(w, h);
-        w = Math.round(w * s);
-        h = Math.round(h * s);
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/jpeg", 0.82));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("image"));
-    };
-    img.src = url;
-  });
+async function compress(file) {
+  let bitmap = null;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    bitmap = null;
+  }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (bitmap) {
+    const max = 700;
+    let w = bitmap.width;
+    let h = bitmap.height;
+    if (Math.max(w, h) > max) {
+      const s = max / Math.max(w, h);
+      w = Math.round(w * s);
+      h = Math.round(h * s);
+    }
+    canvas.width = w;
+    canvas.height = h;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+  } else {
+    await new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const max = 700;
+        let w = img.width;
+        let h = img.height;
+        if (Math.max(w, h) > max) {
+          const s = max / Math.max(w, h);
+          w = Math.round(w * s);
+          h = Math.round(h * s);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Bu fotoğraf okunamadı. JPG veya PNG seçin."));
+      };
+      img.src = url;
+    });
+  }
+  let quality = 0.72;
+  let dataUrl = canvas.toDataURL("image/jpeg", quality);
+  while (dataUrl.length > 900000 && quality > 0.4) {
+    quality -= 0.1;
+    dataUrl = canvas.toDataURL("image/jpeg", quality);
+  }
+  return dataUrl;
 }
 
 function scheduleSave() {
@@ -54,7 +83,7 @@ async function saveMenu() {
     await saveMenuGithub(menu);
     saveState.textContent = "Kaydedildi. Menü yaklaşık 1 dk içinde güncellenir.";
   } catch (err) {
-    saveState.textContent = err.status === 401 ? "Token geçersiz" : "Kayıt olmadı";
+    saveState.textContent = githubError(err);
   }
 }
 
@@ -77,7 +106,7 @@ function render() {
       const row = document.createElement("article");
       row.className = "item";
       const img = item.image
-        ? `<img class="thumb" src="${escapeAttr(item.image)}" alt="" />`
+        ? `<img class="thumb" src="${escapeAttr(mediaUrl(item.image))}" alt="" />`
         : `<div class="thumb empty">Foto yok</div>`;
       row.innerHTML = `
         ${img}
@@ -88,8 +117,8 @@ function render() {
           </div>
           <input data-desc="${sIndex}:${iIndex}" value="${escapeAttr(item.desc)}" placeholder="Kısa açıklama" />
           <div class="mini">
-            <label class="file">Fotoğraf
-              <input type="file" accept="image/*" data-photo="${sIndex}:${iIndex}" />
+            <label class="file">Fotoğraf ekle
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/*" data-photo="${sIndex}:${iIndex}" />
             </label>
             <button type="button" data-del-item="${sIndex}:${iIndex}" class="danger">Ürünü sil</button>
           </div>
@@ -164,6 +193,12 @@ catsEl.addEventListener("click", (e) => {
   }
 });
 
+function githubError(err) {
+  if (err.status === 401 || err.status === 403) return "Token yazma yetkisiz. repo yetkili yeni token alın.";
+  if (err.status === 422) return "Fotoğraf çok büyük veya GitHub reddetti. Daha küçük JPG deneyin.";
+  return err.message || "Fotoğraf yüklenemedi";
+}
+
 catsEl.addEventListener("change", async (e) => {
   const t = e.target;
   if (!t.dataset.photo || !t.files?.[0]) return;
@@ -173,9 +208,9 @@ catsEl.addEventListener("change", async (e) => {
     const data = await compress(t.files[0]);
     menu.sections[s].items[i].image = await uploadPhotoGithub(data);
     render();
-    scheduleSave();
-  } catch {
-    saveState.textContent = "Fotoğraf yüklenemedi";
+    await saveMenu();
+  } catch (err) {
+    saveState.textContent = githubError(err);
   }
 });
 
@@ -204,7 +239,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   } catch {
     sessionStorage.removeItem(TOKEN_KEY);
     loginErr.hidden = false;
-    loginErr.textContent = "Token geçersiz veya bu repoya yetkisi yok.";
+    loginErr.textContent = "Token geçersiz. repo kutusu işaretli yeni token alın.";
   }
 });
 

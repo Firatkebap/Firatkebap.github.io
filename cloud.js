@@ -32,6 +32,17 @@ function copySection(section) {
   };
 }
 
+function mediaUrl(path) {
+  if (!path) return "";
+  if (/^https?:/i.test(path)) return path;
+  const c = window.GITHUB_CONFIG || {};
+  const clean = String(path).replace(/^\.\//, "").replace(/^\//, "");
+  if (c.owner && c.repo) {
+    return `https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch || "main"}/${clean}`;
+  }
+  return clean;
+}
+
 function utf8ToBase64(text) {
   const bytes = new TextEncoder().encode(text);
   let binary = "";
@@ -43,24 +54,31 @@ function utf8ToBase64(text) {
 
 function dataUrlToBase64(dataUrl) {
   const i = dataUrl.indexOf(",");
-  return dataUrl.slice(i + 1);
+  return (i >= 0 ? dataUrl.slice(i + 1) : dataUrl).replace(/\s/g, "");
+}
+
+function contentsUrl(path) {
+  const c = window.GITHUB_CONFIG;
+  const encoded = String(path)
+    .split("/")
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/");
+  return `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${encoded}`;
 }
 
 async function ghContents(path, options = {}) {
-  const c = window.GITHUB_CONFIG;
-  const url = `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${path}`;
   const { headers: extraHeaders, ...rest } = options;
   const headers = {
     Accept: "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28",
     ...(extraHeaders || {}),
   };
   if (ghToken()) headers.Authorization = "Bearer " + ghToken();
   if (rest.body) headers["Content-Type"] = "application/json";
-  const res = await fetch(url, { ...rest, headers });
+  const res = await fetch(contentsUrl(path), { ...rest, headers });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = new Error(data.message || "github");
+    const err = new Error(data.message || "GitHub kaydı başarısız");
     err.status = res.status;
     err.data = data;
     throw err;
@@ -106,18 +124,23 @@ async function saveMenuGithub(menu) {
 
 async function uploadPhotoGithub(dataUrl) {
   const name = "uploads/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
-  await putFile(name, dataUrlToBase64(dataUrl), "Ürün fotoğrafı eklendi");
-  return name;
+  const result = await putFile(name, dataUrlToBase64(dataUrl), "Urun fotografi eklendi");
+  return (result.content && result.content.download_url) || mediaUrl(name);
 }
 
 async function verifyGithubToken() {
   const c = window.GITHUB_CONFIG;
-  const res = await fetch(`https://api.github.com/repos/${c.owner}/${c.repo}`, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: "Bearer " + ghToken(),
-    },
-  });
-  if (!res.ok) throw Object.assign(new Error("auth"), { status: res.status });
-  return res.json();
+  const headers = {
+    Accept: "application/vnd.github+json",
+    Authorization: "Bearer " + ghToken(),
+  };
+  const me = await fetch("https://api.github.com/user", { headers });
+  if (!me.ok) throw Object.assign(new Error("auth"), { status: me.status });
+  const repo = await fetch(`https://api.github.com/repos/${c.owner}/${c.repo}`, { headers });
+  if (!repo.ok) throw Object.assign(new Error("auth"), { status: repo.status });
+  const info = await repo.json();
+  if (info.permissions && info.permissions.push === false) {
+    throw Object.assign(new Error("no_push"), { status: 403 });
+  }
+  return info;
 }
