@@ -14,8 +14,8 @@ using std::wstring;
 using std::vector;
 
 static const wchar_t kApp[] = L"Firat Kebap Admin";
-static const char kOwner[] = "ykula89";
-static const char kRepo[] = "Firatkebap";
+static const char kOwner[] = "Firatkebap";
+static const char kRepo[] = "Firatkebap.github.io";
 static const char kBranch[] = "main";
 static const char kMenuPath[] = "data/menu.json";
 

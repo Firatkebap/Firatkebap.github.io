@@ -1,6 +1,6 @@
 window.GITHUB_CONFIG = {
-  owner: "ykula89",
-  repo: "Firatkebap",
+  owner: "Firatkebap",
+  repo: "Firatkebap.github.io",
   branch: "main",
   menuPath: "data/menu.json",
 };
