@@ -30,12 +30,12 @@ static const COLORREF C_MUTED = RGB(180, 156, 136);
 static const COLORREF C_ROW = RGB(26, 16, 13);
 static const int ROW_H = 86;
 
-struct Item { string id, name, desc, image; double price = 0; };
-struct Section { string id, title; vector<Item> items; };
-struct Menu { string name, subtitle, kicker, note; vector<Section> sections; };
+struct Item { string id, name, nameEn, desc, descEn, image; double price = 0; };
+struct Section { string id, title, titleEn; vector<Item> items; };
+struct Menu { string name, nameEn, subtitle, subtitleEn, kicker, kickerEn, note, noteEn; vector<Section> sections; };
 
 static HINSTANCE gInst;
-static HWND gMain, gList, gName, gDesc, gPrice, gStatus;
+static HWND gMain, gList, gName, gNameEn, gDesc, gDescEn, gPrice, gStatus;
 static HFONT gFont, gFontB, gFontTitle, gFontSm;
 static HBRUSH gBg, gCard, gRow, gEdit;
 static Menu gMenu;
@@ -106,17 +106,20 @@ static string JsonEsc(const string& s) {
 }
 static string MenuToJson(const Menu& m) {
   std::ostringstream o;
-  o << "{\n  \"name\": \"" << JsonEsc(m.name) << "\",\n  \"subtitle\": \"" << JsonEsc(m.subtitle)
-    << "\",\n  \"kicker\": \"" << JsonEsc(m.kicker) << "\",\n  \"note\": \"" << JsonEsc(m.note)
+  o << "{\n  \"name\": \"" << JsonEsc(m.name) << "\",\n  \"nameEn\": \"" << JsonEsc(m.nameEn)
+    << "\",\n  \"subtitle\": \"" << JsonEsc(m.subtitle) << "\",\n  \"subtitleEn\": \"" << JsonEsc(m.subtitleEn)
+    << "\",\n  \"kicker\": \"" << JsonEsc(m.kicker) << "\",\n  \"kickerEn\": \"" << JsonEsc(m.kickerEn)
+    << "\",\n  \"note\": \"" << JsonEsc(m.note) << "\",\n  \"noteEn\": \"" << JsonEsc(m.noteEn)
     << "\",\n  \"sections\": [\n";
   for (size_t s = 0; s < m.sections.size(); s++) {
     const auto& sec = m.sections[s];
     o << "    {\n      \"id\": \"" << JsonEsc(sec.id) << "\",\n      \"title\": \"" << JsonEsc(sec.title)
-      << "\",\n      \"items\": [\n";
+      << "\",\n      \"titleEn\": \"" << JsonEsc(sec.titleEn) << "\",\n      \"items\": [\n";
     for (size_t i = 0; i < sec.items.size(); i++) {
       const auto& it = sec.items[i];
       o << "        {\"id\": \"" << JsonEsc(it.id) << "\", \"name\": \"" << JsonEsc(it.name)
-        << "\", \"desc\": \"" << JsonEsc(it.desc) << "\", \"price\": " << it.price
+        << "\", \"nameEn\": \"" << JsonEsc(it.nameEn) << "\", \"desc\": \"" << JsonEsc(it.desc)
+        << "\", \"descEn\": \"" << JsonEsc(it.descEn) << "\", \"price\": " << it.price
         << ", \"image\": \"" << JsonEsc(it.image) << "\"}";
       o << (i + 1 < sec.items.size() ? ",\n" : "\n");
     }
@@ -153,9 +156,13 @@ static bool ParseMenu(const string& json, Menu& m) {
   size_t secKey = json.find("\"sections\"");
   if (secKey == string::npos) return false;
   ExtractStr(json, "name", 0, secKey, m.name);
+  ExtractStr(json, "nameEn", 0, secKey, m.nameEn);
   ExtractStr(json, "subtitle", 0, secKey, m.subtitle);
+  ExtractStr(json, "subtitleEn", 0, secKey, m.subtitleEn);
   ExtractStr(json, "kicker", 0, secKey, m.kicker);
+  ExtractStr(json, "kickerEn", 0, secKey, m.kickerEn);
   ExtractStr(json, "note", 0, secKey, m.note);
+  ExtractStr(json, "noteEn", 0, secKey, m.noteEn);
   size_t p = json.find('[', secKey);
   while (true) {
     size_t obj = json.find('{', p);
@@ -165,6 +172,7 @@ static bool ParseMenu(const string& json, Menu& m) {
     Section s;
     ExtractStr(json, "id", obj, items, s.id);
     ExtractStr(json, "title", obj, items, s.title);
+    ExtractStr(json, "titleEn", obj, items, s.titleEn);
     size_t arr = json.find('[', items);
     size_t arrEnd = json.find(']', arr);
     size_t ip = arr;
@@ -174,7 +182,9 @@ static bool ParseMenu(const string& json, Menu& m) {
       size_t ie = json.find('}', io);
       Item it;
       ExtractStr(json, "id", io, ie, it.id);
+      ExtractStr(json, "nameEn", io, ie, it.nameEn);
       ExtractStr(json, "name", io, ie, it.name);
+      ExtractStr(json, "descEn", io, ie, it.descEn);
       ExtractStr(json, "desc", io, ie, it.desc);
       ExtractStr(json, "image", io, ie, it.image);
       size_t pk = json.find("\"price\"", io);
@@ -315,17 +325,22 @@ static void PullFields() {
   Item* it = CurItem(); if (!it) return;
   wchar_t buf[1024];
   GetWindowTextW(gName, buf, 512); it->name = Utf8(buf);
+  GetWindowTextW(gNameEn, buf, 512); it->nameEn = Utf8(buf);
   GetWindowTextW(gDesc, buf, 1024); it->desc = Utf8(buf);
+  GetWindowTextW(gDescEn, buf, 1024); it->descEn = Utf8(buf);
   GetWindowTextW(gPrice, buf, 32); it->price = _wtof(buf);
 }
 static void PushFields() {
   Item* it = CurItem();
   if (!it) {
-    SetWindowTextW(gName, L""); SetWindowTextW(gDesc, L""); SetWindowTextW(gPrice, L"");
+    SetWindowTextW(gName, L""); SetWindowTextW(gNameEn, L"");
+    SetWindowTextW(gDesc, L""); SetWindowTextW(gDescEn, L""); SetWindowTextW(gPrice, L"");
     return;
   }
   SetWindowTextW(gName, Utf16(it->name).c_str());
+  SetWindowTextW(gNameEn, Utf16(it->nameEn).c_str());
   SetWindowTextW(gDesc, Utf16(it->desc).c_str());
+  SetWindowTextW(gDescEn, Utf16(it->descEn).c_str());
   wchar_t pr[32]; swprintf(pr, 32, L"%.0f", it->price); SetWindowTextW(gPrice, pr);
 }
 static void SyncScroll() {
@@ -425,7 +440,7 @@ static LRESULT CALLBACK ListProc(HWND h, UINT m, WPARAM w, LPARAM l) {
   return DefWindowProcW(h, m, w, l);
 }
 
-static HWND gLblName, gLblPrice, gLblDesc, gBtnPhoto, gBtnDel, gBtnNew, gBtnSave;
+static HWND gLblName, gLblNameEn, gLblPrice, gLblDesc, gLblDescEn, gBtnPhoto, gBtnDel, gBtnNew, gBtnSave;
 static HWND gBtnAddCat, gBtnRenCat, gBtnDelCat, gBtnSite;
 static int gListTop = 148;
 
@@ -523,7 +538,7 @@ static wstring AskText(HWND parent, const wchar_t* title, const wchar_t* prompt,
 }
 
 static bool gSiteDone = false, gSiteOk = false;
-static HWND gSiteName, gSiteSub, gSiteKick, gSiteNote;
+static HWND gSiteName, gSiteSub, gSiteSubEn, gSiteKick, gSiteKickEn, gSiteNote, gSiteNoteEn;
 static HFONT SiteFont(HWND e) {
   SendMessageW(e, WM_SETFONT, (WPARAM)gFont, TRUE);
   return gFont;
@@ -543,21 +558,30 @@ static LRESULT CALLBACK SiteProc(HWND h, UINT m, WPARAM w, LPARAM l) {
       return e;
     };
     mkL(L"Restoran adi", 16);
-    gSiteName = mkE(40, 1, 38, false);
-    mkL(L"Alt yazi (ornek: Pide · Lahmacun Salonu)", 86);
-    gSiteSub = mkE(110, 2, 38, false);
-    mkL(L"Ust satir (bos birakilirsa sitede yazmaz)", 156);
-    gSiteKick = mkE(180, 3, 38, false);
-    mkL(L"Sayfa alti yazi (fiyat notu vs. bos = gizle)", 226);
-    gSiteNote = mkE(250, 4, 72, true);
+    gSiteName = mkE(40, 1, 36, false);
+    mkL(L"Alt yazi TR", 82);
+    gSiteSub = mkE(104, 2, 34, false);
+    mkL(L"Alt yazi EN", 144);
+    gSiteSubEn = mkE(166, 5, 34, false);
+    mkL(L"Ust satir TR (bos = gizle)", 206);
+    gSiteKick = mkE(228, 3, 34, false);
+    mkL(L"Ust satir EN", 268);
+    gSiteKickEn = mkE(290, 6, 34, false);
+    mkL(L"Sayfa alti TR", 330);
+    gSiteNote = mkE(352, 4, 50, true);
+    mkL(L"Sayfa alti EN", 408);
+    gSiteNoteEn = mkE(430, 7, 50, true);
     CreateWindowW(L"BUTTON", L"Tamam", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON,
-                  248, 340, 130, 42, h, (HMENU)IDOK, gInst, nullptr);
+                  248, 500, 130, 42, h, (HMENU)IDOK, gInst, nullptr);
     CreateWindowW(L"BUTTON", L"Iptal", WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                  388, 340, 130, 42, h, (HMENU)IDCANCEL, gInst, nullptr);
+                  388, 500, 130, 42, h, (HMENU)IDCANCEL, gInst, nullptr);
     SetWindowTextW(gSiteName, Utf16(gMenu.name).c_str());
     SetWindowTextW(gSiteSub, Utf16(gMenu.subtitle).c_str());
+    SetWindowTextW(gSiteSubEn, Utf16(gMenu.subtitleEn).c_str());
     SetWindowTextW(gSiteKick, Utf16(gMenu.kicker).c_str());
+    SetWindowTextW(gSiteKickEn, Utf16(gMenu.kickerEn).c_str());
     SetWindowTextW(gSiteNote, Utf16(gMenu.note).c_str());
+    SetWindowTextW(gSiteNoteEn, Utf16(gMenu.noteEn).c_str());
     return 0;
   }
   case WM_COMMAND:
@@ -565,8 +589,11 @@ static LRESULT CALLBACK SiteProc(HWND h, UINT m, WPARAM w, LPARAM l) {
       wchar_t buf[1024];
       GetWindowTextW(gSiteName, buf, 512); gMenu.name = Utf8(TrimW(buf));
       GetWindowTextW(gSiteSub, buf, 512); gMenu.subtitle = Utf8(TrimW(buf));
+      GetWindowTextW(gSiteSubEn, buf, 512); gMenu.subtitleEn = Utf8(TrimW(buf));
       GetWindowTextW(gSiteKick, buf, 512); gMenu.kicker = Utf8(TrimW(buf));
+      GetWindowTextW(gSiteKickEn, buf, 512); gMenu.kickerEn = Utf8(TrimW(buf));
       GetWindowTextW(gSiteNote, buf, 1024); gMenu.note = Utf8(TrimW(buf));
+      GetWindowTextW(gSiteNoteEn, buf, 1024); gMenu.noteEn = Utf8(TrimW(buf));
       gSiteOk = true;
       DestroyWindow(h);
     } else if (LOWORD(w) == IDCANCEL) {
@@ -603,7 +630,7 @@ static bool EditSiteTexts(HWND parent) {
   int y = pr.top + ((pr.bottom - pr.top) - 440) / 2;
   HWND dlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"FiratSite", L"Site yazilari",
                              WS_CAPTION | WS_SYSMENU | WS_VISIBLE | WS_POPUP,
-                             x, y, 570, 440, parent, nullptr, gInst, nullptr);
+                             x, y, 570, 600, parent, nullptr, gInst, nullptr);
   EnableWindow(parent, FALSE);
   MSG msg;
   while (!gSiteDone && GetMessageW(&msg, nullptr, 0, 0)) {
@@ -686,20 +713,24 @@ static void LayoutUI(HWND h) {
   if (listH < 160) listH = 160;
   MoveWindow(gList, 24, gListTop, listW, listH, TRUE);
   int fx = sx + 22, fw = side - 44;
-  int ty = gListTop + 20;
-  MoveWindow(gLblName, fx, ty, fw, 22, TRUE);
-  MoveWindow(gName, fx, ty + 24, fw, 42, TRUE);
-  MoveWindow(gLblPrice, fx, ty + 78, fw, 22, TRUE);
-  MoveWindow(gPrice, fx, ty + 102, fw, 42, TRUE);
-  MoveWindow(gLblDesc, fx, ty + 156, fw, 22, TRUE);
-  int descTop = ty + 180;
-  int delY = H - 88 - 56;
-  int photoY = delY - 64;
-  int descH = photoY - 16 - descTop;
-  if (descH < 80) descH = 80;
-  MoveWindow(gDesc, fx, descTop, fw, descH, TRUE);
-  MoveWindow(gBtnPhoto, fx, photoY, fw, 52, TRUE);
-  MoveWindow(gBtnDel, fx, delY, fw, 52, TRUE);
+  int ty = gListTop + 10;
+  MoveWindow(gLblName, fx, ty, fw, 18, TRUE);
+  MoveWindow(gName, fx, ty + 18, fw, 34, TRUE);
+  MoveWindow(gLblNameEn, fx, ty + 56, fw, 18, TRUE);
+  MoveWindow(gNameEn, fx, ty + 74, fw, 34, TRUE);
+  MoveWindow(gLblPrice, fx, ty + 112, fw, 18, TRUE);
+  MoveWindow(gPrice, fx, ty + 130, fw, 34, TRUE);
+  MoveWindow(gLblDesc, fx, ty + 168, fw, 18, TRUE);
+  int delY = H - 88 - 48;
+  int photoY = delY - 56;
+  int gap = photoY - 16 - (ty + 186);
+  int dH = std::max(48, gap / 2 - 20);
+  MoveWindow(gDesc, fx, ty + 186, fw, dH, TRUE);
+  int enLbl = ty + 186 + dH + 4;
+  MoveWindow(gLblDescEn, fx, enLbl, fw, 18, TRUE);
+  MoveWindow(gDescEn, fx, enLbl + 18, fw, dH, TRUE);
+  MoveWindow(gBtnPhoto, fx, photoY, fw, 48, TRUE);
+  MoveWindow(gBtnDel, fx, delY, fw, 48, TRUE);
   int yb = H - 68;
   MoveWindow(gBtnNew, 24, yb, 180, 52, TRUE);
   MoveWindow(gBtnRenCat, 214, yb, 190, 52, TRUE);
@@ -726,12 +757,16 @@ static LRESULT CALLBACK MainProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     RegisterClassW(&lc);
     gList = CreateWindowW(L"FiratList", L"", WS_CHILD | WS_VISIBLE | WS_VSCROLL, 24, 150, 620, 430, h, 0, gInst, nullptr);
 
-    gLblName = MakeLbl(h, L"Urun adi", 668, 168);
-    gName = MakeEdit(h, 668, 192, 290, 42, 401, false);
-    gLblPrice = MakeLbl(h, L"Fiyat (TL)", 668, 246);
-    gPrice = MakeEdit(h, 668, 270, 290, 42, 402, false);
-    gLblDesc = MakeLbl(h, L"Urun aciklamasi (duzenle)", 668, 324);
-    gDesc = MakeEdit(h, 668, 348, 290, 140, 403, true);
+    gLblName = MakeLbl(h, L"Urun adi (TR)", 668, 168);
+    gName = MakeEdit(h, 668, 186, 290, 34, 401, false);
+    gLblNameEn = MakeLbl(h, L"Product name (EN)", 668, 224);
+    gNameEn = MakeEdit(h, 668, 242, 290, 34, 404, false);
+    gLblPrice = MakeLbl(h, L"Fiyat (TL)", 668, 280);
+    gPrice = MakeEdit(h, 668, 298, 290, 34, 402, false);
+    gLblDesc = MakeLbl(h, L"Aciklama TR", 668, 336);
+    gDesc = MakeEdit(h, 668, 354, 290, 70, 403, true);
+    gLblDescEn = MakeLbl(h, L"Description EN", 668, 428);
+    gDescEn = MakeEdit(h, 668, 446, 290, 70, 405, true);
 
     gBtnPhoto = MakeBtn(h, L"Fotograf ekle", 668, 500, 290, 52, ID_PHOTO, 0);
     gBtnDel = MakeBtn(h, L"Urunu sil", 668, 560, 290, 52, ID_DEL, 0);
@@ -813,7 +848,7 @@ static LRESULT CALLBACK MainProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     HDC dc = (HDC)w;
     SetTextColor(dc, C_MUTED); SetBkColor(dc, C_BG);
     HWND ctl = (HWND)l;
-    if (ctl == gLblName || ctl == gLblPrice || ctl == gLblDesc) {
+    if (ctl == gLblName || ctl == gLblNameEn || ctl == gLblPrice || ctl == gLblDesc || ctl == gLblDescEn) {
       SetBkColor(dc, C_CARD);
       return (LRESULT)gCard;
     }
@@ -827,7 +862,7 @@ static LRESULT CALLBACK MainProc(HWND h, UINT m, WPARAM w, LPARAM l) {
   case WM_COMMAND: {
     int id = LOWORD(w);
     int ntf = HIWORD(w);
-    if ((id == 401 || id == 402 || id == 403) && (ntf == EN_KILLFOCUS || ntf == EN_CHANGE)) {
+    if ((id == 401 || id == 402 || id == 403 || id == 404 || id == 405) && (ntf == EN_KILLFOCUS || ntf == EN_CHANGE)) {
       if (ntf == EN_KILLFOCUS) PullFields();
       return 0;
     }
@@ -845,19 +880,22 @@ static LRESULT CALLBACK MainProc(HWND h, UINT m, WPARAM w, LPARAM l) {
         Status(L"Site yazilari guncellendi. Kalici olmasi icin Kaydet.");
     } else if (id == ID_ADDCAT) {
       if ((int)gMenu.sections.size() >= MAX_CAT) { Status(L"En fazla 32 kategori."); break; }
-      wstring name = AskText(h, L"Kategori ekle", L"Yeni kategori adi", L"Yeni kategori");
+      wstring name = AskText(h, L"Kategori ekle", L"Kategori adi (Turkce)", L"Yeni kategori");
       if (name.empty()) break;
+      wstring nameEn = AskText(h, L"Kategori ekle", L"Category name (English)", name.c_str());
       PullFields();
-      gMenu.sections.push_back(Section{NewId(), Utf8(name), {}});
+      gMenu.sections.push_back(Section{NewId(), Utf8(name), Utf8(nameEn), {}});
       gCat = (int)gMenu.sections.size() - 1; gSel = -1; gScroll = 0;
       PushFields(); LayoutUI(h);
       InvalidateRect(h, nullptr, TRUE); InvalidateRect(gList, nullptr, FALSE);
       Status(L"Kategori eklendi. Urun ekle, sonra Kaydet ve yayinla.");
     } else if (id == ID_RENCAT) {
       auto* s = CurSec(); if (!s) break;
-      wstring name = AskText(h, L"Kategori adi", L"Kategori adini yaz", Utf16(s->title).c_str());
+      wstring name = AskText(h, L"Kategori adi", L"Turkce ad", Utf16(s->title).c_str());
       if (name.empty()) break;
+      wstring nameEn = AskText(h, L"Kategori adi", L"English name", Utf16(s->titleEn).c_str());
       s->title = Utf8(name);
+      s->titleEn = Utf8(nameEn);
       LayoutUI(h); InvalidateRect(h, nullptr, TRUE);
       Status(L"Kategori adi degisti. Kalici olmasi icin Kaydet.");
     } else if (id == ID_DELCAT) {
@@ -878,7 +916,7 @@ static LRESULT CALLBACK MainProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     } else if (id == ID_NEW) {
       auto* s = CurSec(); if (!s) break;
       PullFields();
-      s->items.push_back(Item{NewId(), "Yeni urun", "", "", 0});
+      s->items.push_back(Item{NewId(), "Yeni urun", "New item", "", "", "", 0});
       gSel = (int)s->items.size() - 1;
       PushFields(); SyncScroll(); InvalidateRect(gList, nullptr, FALSE);
       Status(L"Yeni urun eklendi. Ad/fiyat yazip Kaydet.");
@@ -1049,7 +1087,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int) {
   MSG msg;
   while (GetMessageW(&msg, nullptr, 0, 0)) {
     HWND f = GetFocus();
-    if (f != gDesc && IsDialogMessageW(gMain, &msg)) continue;
+    if (f != gDesc && f != gDescEn && IsDialogMessageW(gMain, &msg)) continue;
     TranslateMessage(&msg); DispatchMessageW(&msg);
   }
   return 0;

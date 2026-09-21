@@ -1,52 +1,69 @@
 {
   "name": "Fırat Kebap",
+  "nameEn": "Firat Kebap",
   "subtitle": "Pide · Lahmacun Salonu",
+  "subtitleEn": "Pide · Lahmacun House",
   "kicker": "",
+  "kickerEn": "",
   "note": "",
+  "noteEn": "",
   "sections": [
     {
       "id": "kebap",
       "title": "Kebaplar",
+      "titleEn": "Kebabs",
       "items": [
         {
           "id": "adana",
           "name": "Adana kebap",
+          "nameEn": "Adana kebab",
           "desc": "Acılı kıyma, köz biber, sumak soğan",
+          "descEn": "Spicy minced lamb, grilled pepper, sumac onion",
           "price": 280,
           "image": "https://raw.githubusercontent.com/Firatkebap/Firatkebap.github.io/main/uploads/1790028942573-sje3fl.jpg"
         },
         {
           "id": "urfa",
           "name": "Urfa kebap",
+          "nameEn": "Urfa kebab",
           "desc": "Acısız kıyma, köz domates",
+          "descEn": "Mild minced lamb, grilled tomato",
           "price": 280,
           "image": ""
         },
         {
           "id": "kuzu-sis",
           "name": "Kuzu şiş",
+          "nameEn": "Lamb shish",
           "desc": "Marine kuzu, köz sebze",
+          "descEn": "Marinated lamb, grilled vegetables",
           "price": 320,
           "image": ""
         },
         {
           "id": "tavuk-sis",
           "name": "Tavuk şiş",
+          "nameEn": "Chicken shish",
           "desc": "Izgara tavuk, pilav",
+          "descEn": "Grilled chicken, rice",
           "price": 240,
           "image": ""
         },
         {
           "id": "beyti",
           "name": "Beyti",
+          "nameEn": "Beyti",
           "desc": "Lavaşta kebap, yoğurt, tereyağı",
+          "descEn": "Kebab in lavash, yogurt, butter",
           "price": 310,
           "image": ""
         },
         {
           "id": "karisik",
           "name": "Karışık ızgara",
+          "nameEn": "Mixed grill",
           "desc": "Adana, şiş, köfte, kanat",
+          "descEn": "Adana, shish, meatballs, wings",
           "price": 420,
           "image": ""
         }
@@ -55,39 +72,50 @@
     {
       "id": "pide",
       "title": "Pideler",
+      "titleEn": "Pides",
       "items": [
         {
           "id": "kiymali-pide",
           "name": "Kıymalı pide",
+          "nameEn": "Minced meat pide",
           "desc": "Taş fırın, maydanoz",
+          "descEn": "Stone oven, parsley",
           "price": 180,
           "image": ""
         },
         {
           "id": "kasarli-pide",
           "name": "Kaşarlı pide",
+          "nameEn": "Cheddar pide",
           "desc": "Bol kaşar",
+          "descEn": "Extra kashar cheese",
           "price": 170,
           "image": ""
         },
         {
           "id": "sucuklu-pide",
           "name": "Sucuklu pide",
+          "nameEn": "Sucuk pide",
           "desc": "Sucuk, kaşar",
+          "descEn": "Turkish sausage, kashar cheese",
           "price": 190,
           "image": ""
         },
         {
           "id": "kusbasi-pide",
           "name": "Kuşbaşılı pide",
+          "nameEn": "Cubed meat pide",
           "desc": "Kuşbaşı et, biber, domates",
+          "descEn": "Cubed beef, pepper, tomato",
           "price": 230,
           "image": ""
         },
         {
           "id": "karisik-pide",
           "name": "Karışık pide",
+          "nameEn": "Mixed pide",
           "desc": "Kıyma, kaşar, sucuk",
+          "descEn": "Minced meat, kashar, sucuk",
           "price": 210,
           "image": ""
         }
@@ -96,25 +124,32 @@
     {
       "id": "lahmacun",
       "title": "Lahmacun",
+      "titleEn": "Lahmacun",
       "items": [
         {
           "id": "lahmacun",
           "name": "Lahmacun",
+          "nameEn": "Lahmacun",
           "desc": "İnce hamur, kıyma",
+          "descEn": "Thin dough, minced meat",
           "price": 70,
           "image": ""
         },
         {
           "id": "findik",
           "name": "Fındık lahmacun",
+          "nameEn": "Mini lahmacun",
           "desc": "Küçük boy",
+          "descEn": "Small size",
           "price": 45,
           "image": ""
         },
         {
           "id": "kasarli-lahmacun",
           "name": "Kaşarlı lahmacun",
+          "nameEn": "Cheese lahmacun",
           "desc": "Fırından sıcak",
+          "descEn": "Hot from the oven",
           "price": 90,
           "image": ""
         }
@@ -123,32 +158,41 @@
     {
       "id": "icecek",
       "title": "İçecekler",
+      "titleEn": "Drinks",
       "items": [
         {
           "id": "ayran",
           "name": "Ayran",
+          "nameEn": "Ayran",
           "desc": "Ev yapımı",
+          "descEn": "Homemade",
           "price": 30,
           "image": ""
         },
         {
           "id": "salgam",
           "name": "Şalgam",
+          "nameEn": "Turnip juice",
           "desc": "Acılı / acısız",
+          "descEn": "Spicy / mild",
           "price": 35,
           "image": ""
         },
         {
           "id": "kola",
           "name": "Kola / Fanta / Sprite",
+          "nameEn": "Coke / Fanta / Sprite",
           "desc": "33 cl",
+          "descEn": "33 cl",
           "price": 45,
           "image": ""
         },
         {
           "id": "cay",
           "name": "Çay",
+          "nameEn": "Tea",
           "desc": "İnce belli",
+          "descEn": "Turkish tea glass",
           "price": 20,
           "image": ""
         }

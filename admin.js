@@ -78,8 +78,11 @@ function scheduleSave() {
 async function saveMenu() {
   menu.name = document.getElementById("restName").value.trim();
   menu.subtitle = document.getElementById("restSub").value.trim();
+  menu.subtitleEn = document.getElementById("restSubEn").value.trim();
   menu.kicker = document.getElementById("restKicker").value.trim();
+  menu.kickerEn = document.getElementById("restKickerEn").value.trim();
   menu.note = document.getElementById("restNote").value.trim();
+  menu.noteEn = document.getElementById("restNoteEn").value.trim();
   try {
     await saveMenuGithub(menu);
     saveState.textContent = "Kaydedildi. Menü yaklaşık 1 dk içinde güncellenir.";
@@ -91,15 +94,19 @@ async function saveMenu() {
 function render() {
   document.getElementById("restName").value = menu.name || "";
   document.getElementById("restSub").value = menu.subtitle || "";
+  document.getElementById("restSubEn").value = menu.subtitleEn || "";
   document.getElementById("restKicker").value = menu.kicker || "";
+  document.getElementById("restKickerEn").value = menu.kickerEn || "";
   document.getElementById("restNote").value = menu.note || "";
+  document.getElementById("restNoteEn").value = menu.noteEn || "";
   catsEl.innerHTML = "";
   menu.sections.forEach((section, sIndex) => {
     const wrap = document.createElement("section");
     wrap.className = "card cat";
     wrap.innerHTML = `
       <div class="cat-head">
-        <input data-cat-title="${sIndex}" value="${escapeAttr(section.title)}" />
+        <input data-cat-title="${sIndex}" value="${escapeAttr(section.title)}" placeholder="Kategori TR" />
+        <input data-cat-title-en="${sIndex}" value="${escapeAttr(section.titleEn)}" placeholder="Category EN" />
         <button type="button" class="ghost" data-add-item="${sIndex}">+ Ürün</button>
         <button type="button" class="ghost danger" data-del-cat="${sIndex}">Sil</button>
       </div>
@@ -114,10 +121,12 @@ function render() {
         ${img}
         <div class="fields">
           <div class="row">
-            <input data-name="${sIndex}:${iIndex}" value="${escapeAttr(item.name)}" placeholder="Ürün adı" />
+            <input data-name="${sIndex}:${iIndex}" value="${escapeAttr(item.name)}" placeholder="Ürün adı TR" />
+            <input data-name-en="${sIndex}:${iIndex}" value="${escapeAttr(item.nameEn)}" placeholder="Name EN" />
             <input data-price="${sIndex}:${iIndex}" type="number" min="0" step="1" value="${item.price}" placeholder="Fiyat" />
           </div>
-          <input data-desc="${sIndex}:${iIndex}" value="${escapeAttr(item.desc)}" placeholder="Kısa açıklama" />
+          <input data-desc="${sIndex}:${iIndex}" value="${escapeAttr(item.desc)}" placeholder="Açıklama TR" />
+          <input data-desc-en="${sIndex}:${iIndex}" value="${escapeAttr(item.descEn)}" placeholder="Description EN" />
           <div class="mini">
             <label class="file">Fotoğraf ekle
               <input type="file" accept="image/jpeg,image/png,image/webp,image/*" data-photo="${sIndex}:${iIndex}" />
@@ -145,14 +154,28 @@ function applyField(t) {
     menu.sections[+t.dataset.catTitle].title = t.value;
     scheduleSave();
   }
+  if (t.dataset.catTitleEn != null) {
+    menu.sections[+t.dataset.catTitleEn].titleEn = t.value;
+    scheduleSave();
+  }
   if (t.dataset.name) {
     const [s, i] = t.dataset.name.split(":").map(Number);
     menu.sections[s].items[i].name = t.value;
     scheduleSave();
   }
+  if (t.dataset.nameEn) {
+    const [s, i] = t.dataset.nameEn.split(":").map(Number);
+    menu.sections[s].items[i].nameEn = t.value;
+    scheduleSave();
+  }
   if (t.dataset.desc) {
     const [s, i] = t.dataset.desc.split(":").map(Number);
     menu.sections[s].items[i].desc = t.value;
+    scheduleSave();
+  }
+  if (t.dataset.descEn) {
+    const [s, i] = t.dataset.descEn.split(":").map(Number);
+    menu.sections[s].items[i].descEn = t.value;
     scheduleSave();
   }
   if (t.dataset.price) {
@@ -174,7 +197,9 @@ catsEl.addEventListener("click", (e) => {
     menu.sections[+t.dataset.addItem].items.push({
       id: uid(),
       name: "Yeni ürün",
+      nameEn: "New item",
       desc: "",
+      descEn: "",
       price: 0,
       image: "",
     });
@@ -217,12 +242,12 @@ catsEl.addEventListener("change", async (e) => {
 });
 
 document.getElementById("addCat").addEventListener("click", () => {
-  menu.sections.push({ id: uid(), title: "Yeni kategori", items: [] });
+  menu.sections.push({ id: uid(), title: "Yeni kategori", titleEn: "New category", items: [] });
   render();
   scheduleSave();
 });
 
-["restName", "restSub", "restKicker", "restNote"].forEach((id) => {
+["restName", "restSub", "restSubEn", "restKicker", "restKickerEn", "restNote", "restNoteEn"].forEach((id) => {
   document.getElementById(id).addEventListener("input", scheduleSave);
 });
 

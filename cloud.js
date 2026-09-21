@@ -12,9 +12,13 @@ function ghToken() {
 function emptyMenu() {
   return {
     name: "Fırat Kebap",
+    nameEn: "Firat Kebap",
     subtitle: "Pide · Lahmacun Salonu",
+    subtitleEn: "",
     kicker: "",
+    kickerEn: "",
     note: "",
+    noteEn: "",
     sections: typeof MENU !== "undefined" ? MENU.map(copySection) : [],
   };
 }
@@ -23,10 +27,13 @@ function copySection(section) {
   return {
     id: section.id,
     title: section.title,
+    titleEn: section.titleEn || "",
     items: (section.items || []).map((item) => ({
       id: item.id || Math.random().toString(36).slice(2),
       name: item.name,
+      nameEn: item.nameEn || "",
       desc: item.desc || "",
+      descEn: item.descEn || "",
       price: Number(item.price || 0),
       image: item.image || "",
     })),

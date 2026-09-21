@@ -26,8 +26,37 @@ body {
 }
 
 .hero {
+  position: relative;
   text-align: center;
   padding: 2.4rem 1.2rem 1.2rem;
+}
+
+.lang {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #9a9a9a;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+
+.lang button.on {
+  background: #fff;
+  color: #000;
 }
 
 .kicker {
