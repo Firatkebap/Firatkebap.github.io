@@ -11,24 +11,27 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Outfit:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=3" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body>
-    <header class="hero">
-      <div class="lang" id="lang">
-        <button type="button" data-lang="tr">TR</button>
-        <button type="button" data-lang="en">EN</button>
-      </div>
-      <p class="kicker" id="kicker" hidden></p>
-      <h1>Fırat Kebap</h1>
-      <p class="subtitle" id="subtitle">Pide · Lahmacun Salonu</p>
-    </header>
+    <div class="app">
+      <header class="hero">
+        <div class="lang" id="lang">
+          <button type="button" data-lang="tr">TR</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <p class="kicker" id="kicker" hidden></p>
+        <h1>Fırat Kebap</h1>
+        <p class="subtitle" id="subtitle">Pide · Lahmacun Salonu</p>
+      </header>
 
-    <nav class="cats" id="cats" aria-label="Kategoriler"></nav>
+      <nav class="cats" id="cats" aria-label="Kategoriler"></nav>
+      <p class="swipe-hint" id="swipeHint"></p>
 
-    <main id="menu"></main>
+      <main id="menu"></main>
 
-    <footer class="foot" id="foot" hidden></footer>
+      <footer class="foot" id="foot" hidden></footer>
+    </div>
 
     <dialog class="zoom" id="zoom">
       <img id="zoomImg" alt="" />
@@ -37,6 +40,6 @@
     <script src="github-config.js"></script>
     <script src="menu.js"></script>
     <script src="cloud.js"></script>
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>

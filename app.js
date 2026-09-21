@@ -2,10 +2,12 @@ const cats = document.getElementById("cats");
 const root = document.getElementById("menu");
 const zoom = document.getElementById("zoom");
 const zoomImg = document.getElementById("zoomImg");
+const swipeHint = document.getElementById("swipeHint");
 
 let menuData = null;
-let catObserver = null;
 let lang = localStorage.getItem("fk_lang") === "en" ? "en" : "tr";
+let catIndex = 0;
+let syncing = false;
 
 function money(n) {
   return Number(n).toLocaleString("tr-TR") + " ₺";
@@ -41,13 +43,31 @@ function syncLangButtons() {
   document.documentElement.lang = lang;
 }
 
+function setActiveCat(i, scrollCats = true) {
+  const n = cats.children.length;
+  if (!n) return;
+  catIndex = Math.max(0, Math.min(i, n - 1));
+  [...cats.children].forEach((el, idx) => el.classList.toggle("on", idx === catIndex));
+  if (scrollCats) {
+    cats.children[catIndex].scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }
+}
+
+function goToCat(i, behavior = "smooth") {
+  const panels = root.children;
+  if (!panels.length) return;
+  catIndex = Math.max(0, Math.min(i, panels.length - 1));
+  setActiveCat(catIndex);
+  syncing = true;
+  root.scrollTo({ left: catIndex * root.clientWidth, behavior });
+  setTimeout(() => {
+    syncing = false;
+  }, behavior === "smooth" ? 380 : 50);
+}
+
 function render(data) {
   if (data) menuData = data;
   if (!menuData) return;
-  if (catObserver) {
-    catObserver.disconnect();
-    catObserver = null;
-  }
 
   const sections = menuData.sections || [];
   document.querySelector(".hero h1").textContent = txt(menuData, "name") || "Fırat Kebap";
@@ -55,23 +75,27 @@ function render(data) {
   setLine(document.getElementById("kicker"), txt(menuData, "kicker"));
   setLine(document.getElementById("foot"), txt(menuData, "note"));
   document.title = txt(menuData, "name") || "Menu";
-  document.getElementById("cats").setAttribute("aria-label", lang === "en" ? "Categories" : "Kategoriler");
+  cats.setAttribute("aria-label", lang === "en" ? "Categories" : "Kategoriler");
+  swipeHint.textContent = lang === "en" ? "Swipe for the next menu" : "Sonraki menü için kaydır";
   syncLangButtons();
 
   cats.innerHTML = "";
   root.innerHTML = "";
 
-  sections.forEach((section) => {
+  sections.forEach((section, sIndex) => {
     const title = txt(section, "title");
-    const link = document.createElement("a");
-    link.href = "#" + section.id;
-    link.textContent = title;
-    cats.appendChild(link);
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.textContent = title;
+    tab.addEventListener("click", () => goToCat(sIndex));
+    cats.appendChild(tab);
 
     const wrap = document.createElement("section");
     wrap.className = "section";
-    wrap.id = section.id;
-    wrap.innerHTML = `<h2>${escapeHtml(title)}</h2>`;
+    wrap.dataset.index = String(sIndex);
+    const inner = document.createElement("div");
+    inner.className = "sheet-list";
+    inner.innerHTML = `<h2>${escapeHtml(title)}</h2>`;
 
     (section.items || []).forEach((item) => {
       const name = txt(item, "name");
@@ -85,36 +109,21 @@ function render(data) {
       row.innerHTML = `
         ${photo}
         <div class="copy">
-          <h3>${escapeHtml(name)}</h3>
+          <div class="line">
+            <h3>${escapeHtml(name)}</h3>
+            <span class="price">${money(item.price)}</span>
+          </div>
           <p>${escapeHtml(desc)}</p>
         </div>
-        <span class="price">${money(item.price)}</span>
       `;
-      wrap.appendChild(row);
+      inner.appendChild(row);
     });
 
+    wrap.appendChild(inner);
     root.appendChild(wrap);
   });
 
-  const links = [...cats.querySelectorAll("a")];
-  links[0]?.classList.add("active");
-
-  catObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        links.forEach((a) =>
-          a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id)
-        );
-      });
-    },
-    { rootMargin: "0px 0px -70% 0px", threshold: 0.2 }
-  );
-
-  sections.forEach((section) => {
-    const el = document.getElementById(section.id);
-    if (el) catObserver.observe(el);
-  });
+  requestAnimationFrame(() => goToCat(Math.min(catIndex, Math.max(0, sections.length - 1)), "auto"));
 }
 
 document.getElementById("lang").addEventListener("click", (e) => {
@@ -124,6 +133,18 @@ document.getElementById("lang").addEventListener("click", (e) => {
   localStorage.setItem("fk_lang", lang);
   render();
 });
+
+root.addEventListener(
+  "scroll",
+  () => {
+    if (syncing || !root.clientWidth) return;
+    const i = Math.round(root.scrollLeft / root.clientWidth);
+    if (i !== catIndex) setActiveCat(i);
+  },
+  { passive: true }
+);
+
+window.addEventListener("resize", () => goToCat(catIndex, "auto"));
 
 root.addEventListener("click", (e) => {
   const btn = e.target.closest(".dish-btn");
