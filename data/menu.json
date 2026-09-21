@@ -11,42 +11,42 @@
           "id": "adana",
           "name": "Adana kebap",
           "desc": "Acılı kıyma, köz biber, sumak soğan",
-          "price": 280.0,
-          "image": ""
+          "price": 280,
+          "image": "https://raw.githubusercontent.com/ykula89/firat-kebap/main/uploads/1790028942573-sje3fl.jpg"
         },
         {
           "id": "urfa",
           "name": "Urfa kebap",
           "desc": "Acısız kıyma, köz domates",
-          "price": 280.0,
+          "price": 280,
           "image": ""
         },
         {
           "id": "kuzu-sis",
           "name": "Kuzu şiş",
           "desc": "Marine kuzu, köz sebze",
-          "price": 320.0,
+          "price": 320,
           "image": ""
         },
         {
           "id": "tavuk-sis",
           "name": "Tavuk şiş",
           "desc": "Izgara tavuk, pilav",
-          "price": 240.0,
+          "price": 240,
           "image": ""
         },
         {
           "id": "beyti",
           "name": "Beyti",
           "desc": "Lavaşta kebap, yoğurt, tereyağı",
-          "price": 310.0,
+          "price": 310,
           "image": ""
         },
         {
           "id": "karisik",
           "name": "Karışık ızgara",
           "desc": "Adana, şiş, köfte, kanat",
-          "price": 420.0,
+          "price": 420,
           "image": ""
         }
       ]
@@ -59,35 +59,35 @@
           "id": "kiymali-pide",
           "name": "Kıymalı pide",
           "desc": "Taş fırın, maydanoz",
-          "price": 180.0,
+          "price": 180,
           "image": ""
         },
         {
           "id": "kasarli-pide",
           "name": "Kaşarlı pide",
           "desc": "Bol kaşar",
-          "price": 170.0,
+          "price": 170,
           "image": ""
         },
         {
           "id": "sucuklu-pide",
           "name": "Sucuklu pide",
           "desc": "Sucuk, kaşar",
-          "price": 190.0,
+          "price": 190,
           "image": ""
         },
         {
           "id": "kusbasi-pide",
           "name": "Kuşbaşılı pide",
           "desc": "Kuşbaşı et, biber, domates",
-          "price": 230.0,
+          "price": 230,
           "image": ""
         },
         {
           "id": "karisik-pide",
           "name": "Karışık pide",
           "desc": "Kıyma, kaşar, sucuk",
-          "price": 210.0,
+          "price": 210,
           "image": ""
         }
       ]
@@ -100,21 +100,21 @@
           "id": "lahmacun",
           "name": "Lahmacun",
           "desc": "İnce hamur, kıyma",
-          "price": 70.0,
+          "price": 70,
           "image": ""
         },
         {
           "id": "findik",
           "name": "Fındık lahmacun",
           "desc": "Küçük boy",
-          "price": 45.0,
+          "price": 45,
           "image": ""
         },
         {
           "id": "kasarli-lahmacun",
           "name": "Kaşarlı lahmacun",
           "desc": "Fırından sıcak",
-          "price": 90.0,
+          "price": 90,
           "image": ""
         }
       ]
@@ -127,28 +127,28 @@
           "id": "ayran",
           "name": "Ayran",
           "desc": "Ev yapımı",
-          "price": 30.0,
+          "price": 30,
           "image": ""
         },
         {
           "id": "salgam",
           "name": "Şalgam",
           "desc": "Acılı / acısız",
-          "price": 35.0,
+          "price": 35,
           "image": ""
         },
         {
           "id": "kola",
           "name": "Kola / Fanta / Sprite",
           "desc": "33 cl",
-          "price": 45.0,
+          "price": 45,
           "image": ""
         },
         {
           "id": "cay",
           "name": "Çay",
           "desc": "İnce belli",
-          "price": 20.0,
+          "price": 20,
           "image": ""
         }
       ]
