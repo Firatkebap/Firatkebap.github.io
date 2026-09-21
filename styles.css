@@ -158,6 +158,12 @@ main {
   margin: 0 auto;
 }
 
+.qr-btn,
+#qrBtn,
+.sheet {
+  display: none !important;
+}
+
 .zoom {
   border: 0;
   padding: 0;
