@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#140c09" />
+    <title>Admin · Fırat Kebap</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <section class="gate" id="setup" hidden>
+      <div class="card wide">
+        <p class="kicker">Kurulum</p>
+        <h1>GitHub henüz bağlı değil</h1>
+        <p class="hint">github-config.js içinde owner doldurulunca bu panel canlı siteden çalışır.</p>
+      </div>
+    </section>
+
+    <section class="gate" id="gate">
+      <div class="card wide">
+        <p class="kicker">Yönetim</p>
+        <h1>Fırat Kebap</h1>
+        <p class="hint">
+          GitHub token ile girin. Token tarayıcıda kalır, siteye yazılmaz. Müşteri menüyü token olmadan görür.
+        </p>
+        <p class="hint">
+          Token:
+          <a href="https://github.com/settings/tokens/new?scopes=repo&description=FiratKebapAdmin" target="_blank" rel="noopener"
+            >repo yetkili yeni token</a
+          >
+          oluşturun, kopyalayıp aşağıya yapıştırın.
+        </p>
+        <form id="loginForm">
+          <label>
+            GitHub token
+            <input type="password" id="pin" autocomplete="off" required />
+          </label>
+          <p class="err" id="loginErr" hidden></p>
+          <button type="submit">Giriş</button>
+        </form>
+      </div>
+    </section>
+
+    <div class="app" id="app" hidden>
+      <header class="top">
+        <div>
+          <p class="kicker">Admin</p>
+          <h1>Menü düzenle</h1>
+        </div>
+        <div class="top-actions">
+          <span class="save-state" id="saveState">Kayıtlı</span>
+          <a class="ghost" href="index.html" target="_blank" rel="noopener">Menüyü gör</a>
+          <button type="button" class="ghost" id="logoutBtn">Çıkış</button>
+        </div>
+      </header>
+
+      <section class="card meta">
+        <label>Restoran adı <input id="restName" /></label>
+        <label>Alt yazı <input id="restSub" /></label>
+        <label>Üst satır <input id="restKicker" /></label>
+      </section>
+
+      <div class="toolbar">
+        <button type="button" id="addCat">+ Kategori</button>
+      </div>
+
+      <div id="cats"></div>
+    </div>
+
+    <script src="github-config.js"></script>
+    <script src="menu.js"></script>
+    <script src="cloud.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+node_modules/
+data/sessions.json
+data/config.json
+.DS_Store
+Thumbs.db
+*.tmp
+__pycache__/
+*.pyc
+*.zip
+firebase-config.js
