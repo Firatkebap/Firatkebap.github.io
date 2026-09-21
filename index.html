@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#140c09" />
+    <meta name="theme-color" content="#000000" />
     <title>Fırat Kebap · Pide Lahmacun Salonu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,36 +14,22 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="ember" aria-hidden="true"></div>
-
     <header class="hero">
-      <p class="kicker">Mangal · Taş fırın</p>
+      <p class="kicker" id="kicker" hidden></p>
       <h1>Fırat Kebap</h1>
-      <p class="subtitle">Pide · Lahmacun Salonu</p>
+      <p class="subtitle" id="subtitle">Pide · Lahmacun Salonu</p>
     </header>
 
     <nav class="cats" id="cats" aria-label="Kategoriler"></nav>
 
     <main id="menu"></main>
 
-    <footer class="foot">
-      <p>Fiyatlar değişiklik gösterebilir.</p>
-      <button type="button" class="qr-btn" id="qrBtn">QR kodu göster</button>
-    </footer>
+    <footer class="foot" id="foot" hidden></footer>
 
-    <dialog class="sheet" id="qrSheet">
-      <div class="sheet-inner">
-        <h2>Masa QR kodu</h2>
-        <p>Bu kodu basıp masaya koyun. Müşteri tarayınca bu menü açılır.</p>
-        <div id="qrBox" class="qr-box"></div>
-        <p class="url" id="pageUrl"></p>
-        <form method="dialog">
-          <button type="submit" class="qr-btn">Kapat</button>
-        </form>
-      </div>
+    <dialog class="zoom" id="zoom">
+      <img id="zoomImg" alt="" />
     </dialog>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
     <script src="github-config.js"></script>
     <script src="menu.js"></script>
     <script src="cloud.js"></script>

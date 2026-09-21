@@ -13,7 +13,8 @@ function emptyMenu() {
   return {
     name: "Fırat Kebap",
     subtitle: "Pide · Lahmacun Salonu",
-    kicker: "Mangal · Taş fırın",
+    kicker: "",
+    note: "",
     sections: typeof MENU !== "undefined" ? MENU.map(copySection) : [],
   };
 }

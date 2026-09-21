@@ -5,7 +5,7 @@ const setup = document.getElementById("setup");
 const saveState = document.getElementById("saveState");
 const loginErr = document.getElementById("loginErr");
 
-let menu = { name: "", subtitle: "", kicker: "", sections: [] };
+let menu = { name: "", subtitle: "", kicker: "", note: "", sections: [] };
 let saveTimer = 0;
 
 function uid() {
@@ -79,6 +79,7 @@ async function saveMenu() {
   menu.name = document.getElementById("restName").value.trim();
   menu.subtitle = document.getElementById("restSub").value.trim();
   menu.kicker = document.getElementById("restKicker").value.trim();
+  menu.note = document.getElementById("restNote").value.trim();
   try {
     await saveMenuGithub(menu);
     saveState.textContent = "Kaydedildi. Menü yaklaşık 1 dk içinde güncellenir.";
@@ -91,6 +92,7 @@ function render() {
   document.getElementById("restName").value = menu.name || "";
   document.getElementById("restSub").value = menu.subtitle || "";
   document.getElementById("restKicker").value = menu.kicker || "";
+  document.getElementById("restNote").value = menu.note || "";
   catsEl.innerHTML = "";
   menu.sections.forEach((section, sIndex) => {
     const wrap = document.createElement("section");
@@ -220,7 +222,7 @@ document.getElementById("addCat").addEventListener("click", () => {
   scheduleSave();
 });
 
-["restName", "restSub", "restKicker"].forEach((id) => {
+["restName", "restSub", "restKicker", "restNote"].forEach((id) => {
   document.getElementById(id).addEventListener("input", scheduleSave);
 });
 

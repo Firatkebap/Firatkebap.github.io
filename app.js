@@ -1,9 +1,7 @@
 const cats = document.getElementById("cats");
 const root = document.getElementById("menu");
-const qrBtn = document.getElementById("qrBtn");
-const qrSheet = document.getElementById("qrSheet");
-const qrBox = document.getElementById("qrBox");
-const pageUrl = document.getElementById("pageUrl");
+const zoom = document.getElementById("zoom");
+const zoomImg = document.getElementById("zoomImg");
 
 function money(n) {
   return Number(n).toLocaleString("tr-TR") + " ₺";
@@ -17,12 +15,19 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function setLine(el, text) {
+  const t = (text || "").trim();
+  el.hidden = !t;
+  el.textContent = t;
+}
+
 function render(data) {
   const sections = data.sections || [];
   document.querySelector(".hero h1").textContent = data.name || "Fırat Kebap";
-  document.querySelector(".subtitle").textContent = data.subtitle || "";
-  document.querySelector(".kicker").textContent = data.kicker || "";
-  document.title = (data.name || "Menü") + " · QR Menü";
+  setLine(document.getElementById("subtitle"), data.subtitle);
+  setLine(document.getElementById("kicker"), data.kicker);
+  setLine(document.getElementById("foot"), data.note);
+  document.title = data.name || "Menü";
 
   cats.innerHTML = "";
   root.innerHTML = "";
@@ -41,8 +46,9 @@ function render(data) {
     (section.items || []).forEach((item) => {
       const row = document.createElement("article");
       row.className = item.image ? "item with-photo" : "item";
+      const src = item.image ? escapeHtml(mediaUrl(item.image)) : "";
       const photo = item.image
-        ? `<img class="dish" src="${escapeHtml(mediaUrl(item.image))}" alt="" />`
+        ? `<button type="button" class="dish-btn" data-src="${src}" aria-label="${escapeHtml(item.name)}"><img class="dish" src="${src}" alt="" /></button>`
         : "";
       row.innerHTML = `
         ${photo}
@@ -79,6 +85,15 @@ function render(data) {
   });
 }
 
+root.addEventListener("click", (e) => {
+  const btn = e.target.closest(".dish-btn");
+  if (!btn) return;
+  zoomImg.src = btn.dataset.src;
+  zoom.showModal();
+});
+
+zoom.addEventListener("click", () => zoom.close());
+
 async function loadMenu() {
   try {
     return await loadMenuFile();
@@ -88,17 +103,3 @@ async function loadMenu() {
 }
 
 loadMenu().then(render);
-
-qrBtn.addEventListener("click", async () => {
-  const url = location.href.split("#")[0];
-  pageUrl.textContent = url;
-  qrBox.innerHTML = "";
-  QRCode.toCanvas(url, { width: 220, margin: 1 }, (err, canvas) => {
-    if (err) {
-      qrBox.textContent = "QR oluşturulamadı. Sayfayı internete koyunca tekrar deneyin.";
-      return;
-    }
-    qrBox.appendChild(canvas);
-  });
-  qrSheet.showModal();
-});

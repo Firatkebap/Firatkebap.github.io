@@ -1,7 +1,8 @@
 {
   "name": "Fırat Kebap",
   "subtitle": "Pide · Lahmacun Salonu",
-  "kicker": "Mangal · Taş fırın",
+  "kicker": "",
+  "note": "",
   "sections": [
     {
       "id": "kebap",
