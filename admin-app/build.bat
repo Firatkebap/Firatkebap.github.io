@@ -15,7 +15,8 @@ if not defined GXX (
   exit /b 1
 )
 
-"%GXX%" -std=c++17 -municode -mwindows -O2 FiratKebapAdmin.cpp -o FiratKebapAdmin.exe -lwinhttp -lcrypt32 -lgdiplus -lcomctl32 -lcomdlg32 -lole32 -lgdi32 -luuid
+"%GXX%" -std=c++17 -municode -mwindows -O2 -finput-charset=UTF-8 FiratKebapAdmin.cpp -o FiratKebapAdmin.exe -lwinhttp -lcrypt32 -lcomctl32 -lcomdlg32 -lole32 -lgdi32
 if errorlevel 1 exit /b 1
-echo Derlendi: %cd%\FiratKebapAdmin.exe
+copy /Y FiratKebapAdmin.exe "%USERPROFILE%\Desktop\FiratKebapAdmin.exe" >nul
+echo Derlendi ve masaustune kopyalandi.
 endlocal
