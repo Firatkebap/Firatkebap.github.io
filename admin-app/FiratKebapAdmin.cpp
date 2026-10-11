@@ -408,20 +408,38 @@ static bool TokenWorks() {
   DevLog(string("token_check /user ") + std::to_string(st));
   return st == 200 || st == 403;
 }
-static int PollDevice(const string& deviceCode, string& token) {
+static int JsonInt(const string& s, const string& key, int defv) {
+  string pat = "\"" + key + "\"";
+  size_t k = s.find(pat);
+  if (k == string::npos) return defv;
+  size_t col = s.find(':', k);
+  if (col == string::npos) return defv;
+  size_t d = s.find_first_of("0123456789", col);
+  if (d == string::npos || d > col + 12) return defv;
+  int v = atoi(s.c_str() + d);
+  return v > 0 ? v : defv;
+}
+static int PollDevice(const string& deviceCode, string& token, int& waitSec) {
   int st = 0;
   string body = string("client_id=") + kOauthClient + "&device_code=" + deviceCode +
                 "&grant_type=urn:ietf:params:oauth:grant-type:device_code";
   string res = HttpForm(L"/login/oauth/access_token", body, st);
-  DevLog(string("poll st=") + std::to_string(st) + " body=" + res.substr(0, 240));
+  DevLog(string("poll st=") + std::to_string(st) + " wait=" + std::to_string(waitSec) + " body=" + res.substr(0, 240));
   string err;
   Kv(res, "error", err);
-  if (err == "authorization_pending") return 0;
-  if (err == "slow_down") return 1;
+  int srv = JsonInt(res, "interval", waitSec);
+  if (err == "authorization_pending") {
+    waitSec = srv < 5 ? 5 : srv;
+    return 0;
+  }
+  if (err == "slow_down") {
+    waitSec = srv < waitSec + 5 ? waitSec + 5 : srv;
+    if (waitSec < 10) waitSec = 10;
+    return 1;
+  }
   if (err == "expired_token" || err == "access_denied") return -1;
   Kv(res, "access_token", token);
   if (!token.empty()) return 2;
-  if (err.empty()) return 0;
   return 0;
 }
 static void DrainQuit() {
@@ -454,21 +472,6 @@ static LRESULT CALLBACK DevWnd(HWND h, UINT m, WPARAM w, LPARAM l) {
     return 0;
   }
   case WM_TIMER:
-    if (!d) return 0;
-    {
-      string tok;
-      int r = PollDevice(d->deviceCode, tok);
-      if (r == 1) d->interval += 5;
-      if (r == 2) {
-        d->token = tok; d->ok = true; d->done = true;
-        KillTimer(h, 1); DestroyWindow(h);
-      } else if (r < 0) {
-        SetWindowTextW(d->statusLbl, L"Kod suresi doldu veya iptal. Kapatip tekrar dene.");
-        KillTimer(h, 1);
-      } else {
-        SetWindowTextW(d->statusLbl, L"Bekleniyor... kodu yapistirip Authorize de.");
-      }
-    }
     return 0;
   case WM_COMMAND:
     if (LOWORD(w) == 1 && d) {
@@ -564,12 +567,12 @@ static bool RunDeviceAuth() {
   SendMessageW(bUse, WM_SETFONT, (WPARAM)gFontB, TRUE);
   SendMessageW(b3, WM_SETFONT, (WPARAM)gFontSm, TRUE);
   DrainQuit();
-  SetTimer(dlg, 1, 2000, nullptr);
   ShowWindow(dlg, SW_SHOW);
   UpdateWindow(dlg);
   ShellExecuteW(dlg, L"open", L"https://github.com/login/device", nullptr, nullptr, SW_SHOWNORMAL);
   CopyText(d.userCode);
-  DWORD last = 0;
+  d.interval = 5;
+  DWORD last = GetTickCount() - (DWORD)(d.interval * 1000);
   while (!d.done && IsWindow(dlg)) {
     MSG msg;
     while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -579,17 +582,17 @@ static bool RunDeviceAuth() {
     if (GetTickCount() - last >= (DWORD)(d.interval * 1000)) {
       last = GetTickCount();
       string tok;
-      int r = PollDevice(d.deviceCode, tok);
-      if (r == 1) d.interval += 5;
+      int r = PollDevice(d.deviceCode, tok, d.interval);
       if (r == 2) {
         d.token = tok; d.ok = true; d.done = true;
-        KillTimer(dlg, 1);
         DestroyWindow(dlg);
         break;
       } else if (r < 0) {
         if (d.statusLbl) SetWindowTextW(d.statusLbl, L"Kod suresi doldu. Kapatip tekrar dene.");
       } else {
-        if (d.statusLbl) SetWindowTextW(d.statusLbl, L"Yetkiyi verdin, bekleniyor...");
+        wchar_t stt[160];
+        swprintf(stt, 160, L"GitHub sorgusu %d sn ara ile. Authorize sonrasi bekleyin.", d.interval);
+        if (d.statusLbl) SetWindowTextW(d.statusLbl, stt);
       }
     }
     MsgWaitForMultipleObjects(0, nullptr, FALSE, 250, QS_ALLINPUT);
