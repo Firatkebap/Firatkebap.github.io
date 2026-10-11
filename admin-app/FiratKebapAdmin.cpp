@@ -6,10 +6,12 @@
 #include <commdlg.h>
 #include <winhttp.h>
 #include <wincrypt.h>
+#include <shellapi.h>
 #include <string>
 #include <vector>
 #include <sstream>
 #include <algorithm>
+#include <cctype>
 
 using std::string;
 using std::wstring;
@@ -238,6 +240,33 @@ static string Http(const wstring& method, const wstring& path, const string& bod
   WinHttpCloseHandle(req); WinHttpCloseHandle(con); WinHttpCloseHandle(ses);
   return result;
 }
+static string HttpForm(const wstring& path, const string& body, int& status) {
+  status = 0; string result;
+  HINTERNET ses = WinHttpOpen(L"FiratKebapAdmin/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, nullptr, nullptr, 0);
+  if (!ses) return "";
+  HINTERNET con = WinHttpConnect(ses, L"github.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
+  if (!con) { WinHttpCloseHandle(ses); return ""; }
+  HINTERNET req = WinHttpOpenRequest(con, L"POST", path.c_str(), nullptr, WINHTTP_NO_REFERER,
+                                     WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+  if (!req) { WinHttpCloseHandle(con); WinHttpCloseHandle(ses); return ""; }
+  wstring headers = L"Accept: application/json\r\nContent-Type: application/x-www-form-urlencoded\r\nUser-Agent: FiratKebapAdmin\r\n";
+  BOOL ok = WinHttpSendRequest(req, headers.c_str(), (DWORD)-1, body.empty() ? nullptr : (LPVOID)body.data(),
+                               (DWORD)body.size(), (DWORD)body.size(), 0);
+  if (ok) ok = WinHttpReceiveResponse(req, nullptr);
+  DWORD code = 0, sz = sizeof(code);
+  WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr, &code, &sz, nullptr);
+  status = (int)code;
+  if (ok) {
+    DWORD avail = 0;
+    while (WinHttpQueryDataAvailable(req, &avail) && avail) {
+      string chunk(avail, 0); DWORD read = 0;
+      WinHttpReadData(req, chunk.data(), avail, &read);
+      result.append(chunk.data(), read);
+    }
+  }
+  WinHttpCloseHandle(req); WinHttpCloseHandle(con); WinHttpCloseHandle(ses);
+  return result;
+}
 static string GhPath(const string& file) {
   return "/repos/" + string(kOwner) + "/" + string(kRepo) + "/contents/" + file;
 }
@@ -309,6 +338,271 @@ static string GhTokenFromCli() {
   CloseHandle(pi.hProcess); CloseHandle(pi.hThread); CloseHandle(rd);
   while (!out.empty() && (out.back() == '\n' || out.back() == '\r' || out.back() == ' ')) out.pop_back();
   return out;
+}
+
+static const char kOauthClient[] = "178c6fc778ccc68e1d6a";
+
+static void CopyText(const wstring& t) {
+  if (!OpenClipboard(nullptr)) return;
+  EmptyClipboard();
+  HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, (t.size() + 1) * sizeof(wchar_t));
+  if (mem) {
+    memcpy(GlobalLock(mem), t.c_str(), (t.size() + 1) * sizeof(wchar_t));
+    GlobalUnlock(mem);
+    SetClipboardData(CF_UNICODETEXT, mem);
+  }
+  CloseClipboard();
+}
+
+struct DevAuth {
+  string deviceCode, token;
+  wstring userCode;
+  int interval = 5;
+  bool done = false, ok = false;
+  HWND codeLbl = 0, statusLbl = 0;
+};
+
+static void DevLog(const string& s) {
+  wstring path = ConfigPath();
+  size_t slash = path.find_last_of(L"\\/");
+  wstring logp = (slash == wstring::npos ? L"device.log" : path.substr(0, slash + 1) + L"device.log");
+  HANDLE f = CreateFileW(logp.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (f == INVALID_HANDLE_VALUE) return;
+  string line = s + "\r\n";
+  DWORD w; WriteFile(f, line.data(), (DWORD)line.size(), &w, nullptr);
+  CloseHandle(f);
+}
+static bool Kv(const string& s, const string& key, string& out) {
+  out.clear();
+  string qkey = "\"" + key + "\"";
+  size_t k = 0;
+  while ((k = s.find(qkey, k)) != string::npos) {
+    size_t after = k + qkey.size();
+    if (after < s.size() && (s[after] == '_' || isalnum((unsigned char)s[after]))) { k = after; continue; }
+    size_t colon = s.find(':', after);
+    if (colon == string::npos || colon > after + 3) { k = after; continue; }
+    size_t q = s.find('"', colon + 1);
+    if (q == string::npos) break;
+    size_t e = q + 1;
+    while (e < s.size()) {
+      if (s[e] == '\\') { e += 2; continue; }
+      if (s[e] == '"') break;
+      e++;
+    }
+    out = s.substr(q + 1, e - q - 1);
+    return !out.empty();
+  }
+  string k2 = key + "=";
+  size_t p = s.find(k2);
+  if (p == string::npos) return false;
+  p += k2.size();
+  size_t e = s.find_first_of("&\r\n ", p);
+  if (e == string::npos) e = s.size();
+  out = s.substr(p, e - p);
+  return !out.empty();
+}
+static bool TokenWorks() {
+  if (gToken.empty()) return false;
+  int st = 0;
+  Http(L"GET", L"/user", "", st);
+  DevLog(string("token_check /user ") + std::to_string(st));
+  return st == 200 || st == 403;
+}
+static int PollDevice(const string& deviceCode, string& token) {
+  int st = 0;
+  string body = string("client_id=") + kOauthClient + "&device_code=" + deviceCode +
+                "&grant_type=urn:ietf:params:oauth:grant-type:device_code";
+  string res = HttpForm(L"/login/oauth/access_token", body, st);
+  DevLog(string("poll st=") + std::to_string(st) + " body=" + res.substr(0, 240));
+  string err;
+  Kv(res, "error", err);
+  if (err == "authorization_pending") return 0;
+  if (err == "slow_down") return 1;
+  if (err == "expired_token" || err == "access_denied") return -1;
+  Kv(res, "access_token", token);
+  if (!token.empty()) return 2;
+  if (err.empty()) return 0;
+  return 0;
+}
+static void DrainQuit() {
+  MSG m;
+  while (PeekMessageW(&m, nullptr, WM_QUIT, WM_QUIT, PM_REMOVE)) {}
+}
+
+static LRESULT CALLBACK DevWnd(HWND h, UINT m, WPARAM w, LPARAM l) {
+  DevAuth* d = (DevAuth*)GetWindowLongPtrW(h, GWLP_USERDATA);
+  switch (m) {
+  case WM_ERASEBKGND: {
+    RECT rc; GetClientRect(h, &rc);
+    FillRect((HDC)w, &rc, gBg);
+    return 1;
+  }
+  case WM_PAINT: {
+    PAINTSTRUCT ps; HDC dc = BeginPaint(h, &ps);
+    RECT rc; GetClientRect(h, &rc);
+    FillRect(dc, &rc, gBg);
+    RECT card{40, 24, rc.right - 40, rc.bottom - 24};
+    HBRUSH br = CreateSolidBrush(C_CARD);
+    FillRect(dc, &card, br); DeleteObject(br);
+    SetBkMode(dc, TRANSPARENT);
+    SetTextColor(dc, C_GOLD); SelectObject(dc, gFontB);
+    TextOutW(dc, 64, 44, L"GitHub cihaz kodu", 17);
+    SetTextColor(dc, C_MUTED); SelectObject(dc, gFontSm);
+    TextOutW(dc, 64, 78, L"Bu kodu github.com/login/device sayfasina yaz.", 46);
+    TextOutW(dc, 64, 100, L"Authorize deyince bu pencere kendi kapanir.", 43);
+    EndPaint(h, &ps);
+    return 0;
+  }
+  case WM_TIMER:
+    if (!d) return 0;
+    {
+      string tok;
+      int r = PollDevice(d->deviceCode, tok);
+      if (r == 1) d->interval += 5;
+      if (r == 2) {
+        d->token = tok; d->ok = true; d->done = true;
+        KillTimer(h, 1); DestroyWindow(h);
+      } else if (r < 0) {
+        SetWindowTextW(d->statusLbl, L"Kod suresi doldu veya iptal. Kapatip tekrar dene.");
+        KillTimer(h, 1);
+      } else {
+        SetWindowTextW(d->statusLbl, L"Bekleniyor... kodu yapistirip Authorize de.");
+      }
+    }
+    return 0;
+  case WM_COMMAND:
+    if (LOWORD(w) == 1 && d) {
+      CopyText(d->userCode);
+      if (d->statusLbl) SetWindowTextW(d->statusLbl, L"Kod kopyalandi. GitHub sayfasina yapistir.");
+    } else if (LOWORD(w) == 2) {
+      ShellExecuteW(h, L"open", L"https://github.com/login/device", nullptr, nullptr, SW_SHOWNORMAL);
+    } else if (LOWORD(w) == 11 && d) {
+      wchar_t buf[512]{};
+      GetDlgItemTextW(h, 10, buf, 512);
+      wstring tw = buf;
+      while (!tw.empty() && tw.front() <= 32) tw.erase(tw.begin());
+      while (!tw.empty() && tw.back() <= 32) tw.pop_back();
+      if (tw.size() < 20) {
+        if (d->statusLbl) SetWindowTextW(d->statusLbl, L"Token cok kisa. ghp_ ile baslayan tokeni yapistir.");
+      } else {
+        d->token = Utf8(tw);
+        d->ok = true; d->done = true;
+        KillTimer(h, 1); DestroyWindow(h);
+      }
+    } else if (LOWORD(w) == IDCANCEL && d) {
+      d->ok = false; d->done = true; KillTimer(h, 1); DestroyWindow(h);
+    }
+    return 0;
+  case WM_CLOSE:
+    if (d) { d->ok = false; d->done = true; }
+    KillTimer(h, 1); DestroyWindow(h); return 0;
+  case WM_DESTROY:
+    if (d) d->done = true;
+    return 0;
+  case WM_CTLCOLORSTATIC: {
+    HWND ctl = (HWND)l;
+    HDC dc = (HDC)w;
+    if (d && ctl == d->codeLbl) { SetTextColor(dc, C_GOLD); SetBkColor(dc, C_CARD); return (LRESULT)gCard; }
+    SetTextColor(dc, C_MUTED); SetBkColor(dc, C_CARD); return (LRESULT)gCard;
+  }
+  }
+  return DefWindowProcW(h, m, w, l);
+}
+
+static bool RunDeviceAuth() {
+  int st = 0;
+  string req = string("client_id=") + kOauthClient + "&scope=repo";
+  string res = HttpForm(L"/login/device/code", req, st);
+  string user, device;
+  ExtractStr(res, "user_code", 0, res.size(), user);
+  ExtractStr(res, "device_code", 0, res.size(), device);
+  int interval = 5;
+  size_t ip = res.find("\"interval\"");
+  if (ip != string::npos) {
+    size_t dgt = res.find_first_of("0123456789", ip);
+    if (dgt != string::npos) interval = atoi(res.c_str() + dgt);
+  }
+  if (interval < 5) interval = 5;
+  if (user.empty() || device.empty()) {
+    MessageBoxW(nullptr, L"Cihaz kodu alinamadi. Interneti kontrol et.", L"Firat Kebap", MB_ICONERROR);
+    return false;
+  }
+
+  static bool reg = false;
+  if (!reg) {
+    WNDCLASSW wc{};
+    wc.lpfnWndProc = DevWnd; wc.hInstance = gInst; wc.hbrBackground = gBg;
+    wc.lpszClassName = L"FiratDevice"; wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    RegisterClassW(&wc); reg = true;
+  }
+  DevAuth d{};
+  d.deviceCode = device;
+  d.userCode = Utf16(user);
+  d.interval = interval;
+  HWND dlg = CreateWindowExW(0, L"FiratDevice", L"GitHub baglantisi",
+                             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+                             CW_USEDEFAULT, CW_USEDEFAULT, 560, 480, nullptr, nullptr, gInst, nullptr);
+  SetWindowLongPtrW(dlg, GWLP_USERDATA, (LONG_PTR)&d);
+  d.codeLbl = CreateWindowW(L"STATIC", d.userCode.c_str(), WS_CHILD | WS_VISIBLE | SS_CENTER,
+                            80, 140, 390, 50, dlg, 0, gInst, nullptr);
+  SendMessageW(d.codeLbl, WM_SETFONT, (WPARAM)gFontTitle, TRUE);
+  d.statusLbl = CreateWindowW(L"STATIC", L"Kodu yaz, Authorize de. Pencere kendisi devam eder.",
+                              WS_CHILD | WS_VISIBLE | SS_CENTER, 70, 188, 410, 36, dlg, 0, gInst, nullptr);
+  SendMessageW(d.statusLbl, WM_SETFONT, (WPARAM)gFontSm, TRUE);
+  CreateWindowW(L"STATIC", L"Olmadiysa asagiya GitHub token yapistir:",
+                WS_CHILD | WS_VISIBLE, 70, 228, 410, 20, dlg, 0, gInst, nullptr);
+  HWND tokEd = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
+                               WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL,
+                               70, 250, 410, 32, dlg, (HMENU)10, gInst, nullptr);
+  SendMessageW(tokEd, WM_SETFONT, (WPARAM)gFont, TRUE);
+  HWND b1 = CreateWindowW(L"BUTTON", L"Kodu kopyala", WS_CHILD | WS_VISIBLE, 70, 294, 180, 40, dlg, (HMENU)1, gInst, nullptr);
+  HWND b2 = CreateWindowW(L"BUTTON", L"GitHub sayfasini ac", WS_CHILD | WS_VISIBLE, 270, 294, 210, 40, dlg, (HMENU)2, gInst, nullptr);
+  HWND bUse = CreateWindowW(L"BUTTON", L"Token ile baglan", WS_CHILD | WS_VISIBLE, 70, 342, 200, 36, dlg, (HMENU)11, gInst, nullptr);
+  HWND b3 = CreateWindowW(L"BUTTON", L"Iptal", WS_CHILD | WS_VISIBLE, 280, 342, 200, 36, dlg, (HMENU)IDCANCEL, gInst, nullptr);
+  SendMessageW(b1, WM_SETFONT, (WPARAM)gFontB, TRUE);
+  SendMessageW(b2, WM_SETFONT, (WPARAM)gFontB, TRUE);
+  SendMessageW(bUse, WM_SETFONT, (WPARAM)gFontB, TRUE);
+  SendMessageW(b3, WM_SETFONT, (WPARAM)gFontSm, TRUE);
+  DrainQuit();
+  SetTimer(dlg, 1, 2000, nullptr);
+  ShowWindow(dlg, SW_SHOW);
+  UpdateWindow(dlg);
+  ShellExecuteW(dlg, L"open", L"https://github.com/login/device", nullptr, nullptr, SW_SHOWNORMAL);
+  CopyText(d.userCode);
+  DWORD last = 0;
+  while (!d.done && IsWindow(dlg)) {
+    MSG msg;
+    while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+      if (msg.message == WM_QUIT) { DrainQuit(); continue; }
+      if (!IsDialogMessageW(dlg, &msg)) { TranslateMessage(&msg); DispatchMessageW(&msg); }
+    }
+    if (GetTickCount() - last >= (DWORD)(d.interval * 1000)) {
+      last = GetTickCount();
+      string tok;
+      int r = PollDevice(d.deviceCode, tok);
+      if (r == 1) d.interval += 5;
+      if (r == 2) {
+        d.token = tok; d.ok = true; d.done = true;
+        KillTimer(dlg, 1);
+        DestroyWindow(dlg);
+        break;
+      } else if (r < 0) {
+        if (d.statusLbl) SetWindowTextW(d.statusLbl, L"Kod suresi doldu. Kapatip tekrar dene.");
+      } else {
+        if (d.statusLbl) SetWindowTextW(d.statusLbl, L"Yetkiyi verdin, bekleniyor...");
+      }
+    }
+    MsgWaitForMultipleObjects(0, nullptr, FALSE, 250, QS_ALLINPUT);
+  }
+  DrainQuit();
+  if (!d.ok || d.token.empty()) return false;
+  gToken = d.token;
+  if (!TokenWorks()) {
+    DevLog("token rejected by /user");
+    MessageBoxW(nullptr, L"GitHub yetki verdi ama token calismadi. Tokeni yapistir veya org iznini ver.", L"Firat Kebap", MB_ICONWARNING);
+    return false;
+  }
+  return true;
 }
 
 static void Status(const wstring& t) { if (gStatus) SetWindowTextW(gStatus, t.c_str()); }
@@ -807,11 +1101,11 @@ static LRESULT CALLBACK MainProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     RECT rc; GetClientRect(h, &rc);
     FillRect(dc, &rc, gBg);
     TextAt(dc, 28, 16, L"FIRAT KEBAP", C_GOLD, gFontTitle);
-    TextAt(dc, 28, 56, L"Menu yonetimi  ·  firatkebap.github.io", C_MUTED, gFontSm);
+    TextAt(dc, 28, 56, L"Menu yonetimi  ┬À  firatkebap.github.io", C_MUTED, gFontSm);
     int side = std::min(420, std::max(320, (int)(rc.right * 36 / 100)));
     RECT sideR{rc.right - side - 20, gListTop, rc.right - 20, rc.bottom - 88};
     RoundRectFill(dc, sideR, C_CARD, 18);
-    TextAt(dc, sideR.left + 22, gListTop - 26, L"Secili urun — duzenle", C_GOLD, gFontB);
+    TextAt(dc, sideR.left + 22, gListTop - 26, L"Secili urun ÔÇö duzenle", C_GOLD, gFontB);
     EndPaint(h, &ps);
     return 0;
   }
@@ -976,7 +1270,7 @@ static LRESULT CALLBACK LoginWnd(HWND h, UINT m, WPARAM w, LPARAM l) {
     RECT card{70, 40, rc.right - 70, rc.bottom - 40};
     RoundRectFill(dc, card, C_CARD, 24);
     TextAt(dc, 100, 62, L"FIRAT KEBAP", C_GOLD, gFontTitle);
-    TextAt(dc, 100, 108, d && d->first ? L"Ilk giris — hesap olustur" : L"Menu paneli", C_MUTED, gFontSm);
+    TextAt(dc, 100, 108, d && d->first ? L"Ilk giris ÔÇö hesap olustur" : L"Menu paneli", C_MUTED, gFontSm);
     EndPaint(h, &ps);
     return 0;
   }
@@ -991,7 +1285,7 @@ static LRESULT CALLBACK LoginWnd(HWND h, UINT m, WPARAM w, LPARAM l) {
     RoundRectFill(ds->hDC, ds->rcItem, C_EMBER, 22);
     SetBkMode(ds->hDC, TRANSPARENT); SetTextColor(ds->hDC, RGB(255,255,255));
     SelectObject(ds->hDC, gFontB);
-    DrawTextW(ds->hDC, L"Giriş", -1, &ds->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextW(ds->hDC, L"Giri┼ş", -1, &ds->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     return TRUE;
   }
   case WM_COMMAND:
@@ -1006,7 +1300,7 @@ static LRESULT CALLBACK LoginWnd(HWND h, UINT m, WPARAM w, LPARAM l) {
     }
     break;
   case WM_CLOSE: if (d) d->ok = false; DestroyWindow(h); return 0;
-  case WM_DESTROY: PostQuitMessage(0); return 0;
+  case WM_DESTROY: return 0;
   }
   return DefWindowProcW(h, m, w, l);
 }
@@ -1040,10 +1334,13 @@ static bool RunLogin() {
   CreateWindowW(L"BUTTON", L"Giris", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | BS_DEFPUSHBUTTON,
                 100, d.first ? 370 : 300, 300, 48, dlg, (HMENU)IDOK, gInst, nullptr);
   ShowWindow(dlg, SW_SHOW);
-  MSG msg;
-  while (GetMessageW(&msg, nullptr, 0, 0)) {
+  while (IsWindow(dlg)) {
+    MSG msg;
+    BOOL gm = GetMessageW(&msg, nullptr, 0, 0);
+    if (gm <= 0) break;
     if (!IsDialogMessageW(dlg, &msg)) { TranslateMessage(&msg); DispatchMessageW(&msg); }
   }
+  DrainQuit();
   if (!d.ok) return false;
   if (d.emailStr.find(L'@') == wstring::npos || d.p1.size() < 4) {
     MessageBoxW(nullptr, L"Gecerli e-posta ve en az 4 karakter sifre girin.", L"Firat Kebap", MB_ICONWARNING);
@@ -1051,9 +1348,8 @@ static bool RunLogin() {
   }
   if (d.first) {
     if (d.p1 != d.p2) { MessageBoxW(nullptr, L"Sifreler ayni degil.", L"Firat Kebap", MB_ICONWARNING); return false; }
-    gToken = GhTokenFromCli();
-    if (gToken.empty()) {
-      MessageBoxW(nullptr, L"GitHub baglantisi yok. Bu PC'de bir kez gh auth login yapin.", L"Firat Kebap", MB_ICONERROR);
+    if (!RunDeviceAuth()) {
+      MessageBoxW(nullptr, L"GitHub baglanmadi. Kodu device sayfasina yazip Authorize de.", L"Firat Kebap", MB_ICONERROR);
       return false;
     }
     return ProtectWrite(ConfigPath(), Utf8(d.emailStr) + "\n" + Sha256(Utf8(d.p1)) + "\n" + gToken);
@@ -1066,6 +1362,9 @@ static bool RunLogin() {
     return false;
   }
   gToken = savedTok;
+  if (gToken.empty() && !RunDeviceAuth()) return false;
+  if (gToken != savedTok)
+    ProtectWrite(ConfigPath(), savedEmail + "\n" + savedHash + "\n" + gToken);
   return true;
 }
 
@@ -1080,7 +1379,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int) {
   wc.lpszClassName = L"FiratAdminMain"; wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
   wc.style = CS_HREDRAW | CS_VREDRAW;
   RegisterClassW(&wc);
-  gMain = CreateWindowW(L"FiratAdminMain", L"Firat Kebap — Menu",
+  gMain = CreateWindowW(L"FiratAdminMain", L"Firat Kebap ÔÇö Menu",
                         WS_OVERLAPPEDWINDOW,
                         CW_USEDEFAULT, CW_USEDEFAULT, 1200, 800, nullptr, nullptr, inst, nullptr);
   ShowWindow(gMain, SW_SHOWMAXIMIZED);
