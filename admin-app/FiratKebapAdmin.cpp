@@ -361,18 +361,33 @@ struct DevAuth {
   HWND codeLbl = 0, statusLbl = 0;
 };
 
+static bool Kv(const string& s, const string& key, string& out) {
+  if (ExtractStr(s, key, 0, s.size(), out) && !out.empty()) return true;
+  string k = key + "=";
+  size_t p = s.find(k);
+  if (p == string::npos) return false;
+  p += k.size();
+  size_t e = s.find_first_of("& \r\n", p);
+  if (e == string::npos) e = s.size();
+  out = s.substr(p, e - p);
+  return !out.empty();
+}
 static int PollDevice(const string& deviceCode, string& token) {
   int st = 0;
   string body = string("client_id=") + kOauthClient + "&device_code=" + deviceCode +
                 "&grant_type=urn:ietf:params:oauth:grant-type:device_code";
   string res = HttpForm(L"/login/oauth/access_token", body, st);
   string err;
-  ExtractStr(res, "error", 0, res.size(), err);
+  Kv(res, "error", err);
   if (err == "authorization_pending") return 0;
   if (err == "slow_down") return 1;
   if (!err.empty()) return -1;
-  ExtractStr(res, "access_token", 0, res.size(), token);
+  Kv(res, "access_token", token);
   return token.empty() ? -1 : 2;
+}
+static void DrainQuit() {
+  MSG m;
+  while (PeekMessageW(&m, nullptr, WM_QUIT, WM_QUIT, PM_REMOVE)) {}
 }
 
 static LRESULT CALLBACK DevWnd(HWND h, UINT m, WPARAM w, LPARAM l) {
@@ -493,14 +508,38 @@ static bool RunDeviceAuth() {
   SendMessageW(b1, WM_SETFONT, (WPARAM)gFontB, TRUE);
   SendMessageW(b2, WM_SETFONT, (WPARAM)gFontB, TRUE);
   SendMessageW(b3, WM_SETFONT, (WPARAM)gFontSm, TRUE);
-  SetTimer(dlg, 1, (UINT)(interval * 1000), nullptr);
+  DrainQuit();
+  SetTimer(dlg, 1, 2000, nullptr);
   ShowWindow(dlg, SW_SHOW);
+  UpdateWindow(dlg);
   ShellExecuteW(dlg, L"open", L"https://github.com/login/device", nullptr, nullptr, SW_SHOWNORMAL);
   CopyText(d.userCode);
-  MSG msg;
-  while (!d.done && GetMessageW(&msg, nullptr, 0, 0)) {
-    if (!IsDialogMessageW(dlg, &msg)) { TranslateMessage(&msg); DispatchMessageW(&msg); }
+  DWORD last = 0;
+  while (!d.done && IsWindow(dlg)) {
+    MSG msg;
+    while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+      if (msg.message == WM_QUIT) { DrainQuit(); continue; }
+      if (!IsDialogMessageW(dlg, &msg)) { TranslateMessage(&msg); DispatchMessageW(&msg); }
+    }
+    if (GetTickCount() - last >= (DWORD)(d.interval * 1000)) {
+      last = GetTickCount();
+      string tok;
+      int r = PollDevice(d.deviceCode, tok);
+      if (r == 1) d.interval += 5;
+      if (r == 2) {
+        d.token = tok; d.ok = true; d.done = true;
+        KillTimer(dlg, 1);
+        DestroyWindow(dlg);
+        break;
+      } else if (r < 0) {
+        if (d.statusLbl) SetWindowTextW(d.statusLbl, L"Kod suresi doldu. Kapatip tekrar dene.");
+      } else {
+        if (d.statusLbl) SetWindowTextW(d.statusLbl, L"Yetkiyi verdin, bekleniyor...");
+      }
+    }
+    MsgWaitForMultipleObjects(0, nullptr, FALSE, 250, QS_ALLINPUT);
   }
+  DrainQuit();
   if (!d.ok || d.token.empty()) return false;
   gToken = d.token;
   return true;
