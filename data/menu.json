@@ -13,11 +13,16 @@
       "title": "Pideler",
       "titleEn": "Pides",
       "items": [
-        {"id": "kiymali-pide", "name": "Kıymalı pide", "nameEn": "Minced meat pide", "desc": "Taş fırın, maydanoz", "descEn": "Stone oven, parsley", "price": 180, "image": ""},
-        {"id": "kasarli-pide", "name": "Kaşarlı pide", "nameEn": "Cheddar pide", "desc": "Bol kaşar", "descEn": "Extra kashar cheese", "price": 170, "image": ""},
-        {"id": "sucuklu-pide", "name": "Sucuklu pide", "nameEn": "Sucuk pide", "desc": "Sucuk, kaşar", "descEn": "Turkish sausage, kashar cheese", "price": 190, "image": ""},
-        {"id": "kusbasi-pide", "name": "Kuşbaşılı pide", "nameEn": "Cubed meat pide", "desc": "Kuşbaşı et, biber, domates", "descEn": "Cubed beef, pepper, tomato", "price": 230, "image": ""},
-        {"id": "karisik-pide", "name": "Karışık pide", "nameEn": "Mixed pide", "desc": "Kıyma, kaşar, sucuk", "descEn": "Minced meat, kashar, sucuk", "price": 210, "image": ""}
+        {"id": "194181406", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181468", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181531", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181593", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181656", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181718", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181781", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181843", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181906", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
+        {"id": "194181968", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""}
       ]
     },
     {
