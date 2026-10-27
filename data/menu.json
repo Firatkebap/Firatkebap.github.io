@@ -57,6 +57,26 @@
         {"id": "192743453", "name": "Domatesli Kebap", "nameEn": "Tomato Kebab", "desc": "Bulgur pilavı, acılı ezme, közlenmiş domates, biber ve mevsim salata ile servis edilir.", "descEn": "Served with bulgur pilaf, spicy tomato dip, grilled tomatoes, peppers, and seasonal salad.", "price": 400, "image": ""},
         {"id": "192814828", "name": "Karışık Izgara", "nameEn": "Mixed Grill", "desc": "Yarımşar porsiyon kanat, kuzu şiş, Adana kebap ve tavuk şiş; yanında fındık pide, pilav ve lahmacun ile beraber salata malzemeleriyle servis edilir.", "descEn": "Half portions of chicken wings, lamb shish, Adana kebab, and chicken shish, served with small pide bread, rice, lahmacun, and salad.", "price": 850, "image": ""}
       ]
+    },
+    {
+      "id": "192910156",
+      "title": "Dürümler",
+      "titleEn": "Wraps",
+      "items": [
+        {"id": "192949859", "name": "Adana Dürüm", "nameEn": "Adana Kebab Wrap", "desc": "Adana kebap, lavaş ekmeğine sarılarak servis edilir.", "descEn": "Spicy minced meat kebab wrapped in lavash bread.", "price": 250, "image": ""},
+        {"id": "192951562", "name": "Urfa Dürüm", "nameEn": "Urfa kebab Wrap", "desc": "Urfa kebap, lavaş ekmeğine sarılarak servis edilir.", "descEn": "Mild minced meat kebab wrapped in lavash bread", "price": 250, "image": ""},
+        {"id": "192951890", "name": "Tavuk Şiş Dürüm", "nameEn": "Chicken Shish Wrap", "desc": "Izgara tavuk şiş, lavaş ekmeğine sarılarak servis edilir.", "descEn": "Grilled chicken skewers wrapped in lavash bread.", "price": 250, "image": ""},
+        {"id": "192952609", "name": "Kuzu Şiş Dürüm", "nameEn": "Lamb Shish Wrap", "desc": "Izgara kuzu şiş, lavaş ekmeğine sarılarak servis edilir.", "descEn": "Grilled lamb skewers wrapped in lavash bread.", "price": 0, "image": ""}
+      ]
+    },
+    {
+      "id": "193208359",
+      "title": "Tatlılar",
+      "titleEn": "Desserts",
+      "items": [
+        {"id": "193275796", "name": "Katmer", "nameEn": "Katmer Dessert", "desc": "Geleneksel Antep katmeri, ince hamur ve Antep fıstığı ile hazırlanır.", "descEn": "Traditional Turkish pastry made with thin dough and pistachios.", "price": 230, "image": ""},
+        {"id": "193276218", "name": "Künefe", "nameEn": "Kunafa", "desc": "Tel kadayıf ve peynirle hazırlanan, şerbetli ve sıcak servis edilen geleneksel tatlı.", "descEn": "Traditional dessert made with shredded pastry and cheese, soaked in syrup and served hot.", "price": 230, "image": ""}
+      ]
     }
   ]
 }
