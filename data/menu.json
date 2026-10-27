@@ -43,9 +43,14 @@
     },
     {
       "id": "485905359",
-      "title": "Yeni kategori",
-      "titleEn": "Yeni kategori",
+      "title": "Kebaplar",
+      "titleEn": "Kebabs",
       "items": [
+        {"id": "191807296", "name": "Saç Tava", "nameEn": "Sautéed Meat", "desc": "Sac tavada pişirilmiş kuşbaşı et, mevsim salata ve ezme ile servis edilir.", "descEn": "Diced meat cooked on a traditional griddle (sac) is served with a seasonal salad and *ezme* (a spicy, finely chopped tomato and pepper salad).", "price": 600, "image": ""},
+        {"id": "191887578", "name": "Adana Kebap", "nameEn": "Adana Kebab", "desc": "Bulgur pilavı, acılı ezme, közlenmiş domates, biber ve mevsim salata ile servis edilir.", "descEn": "Served with bulgur pilaf, spicy tomato dip, grilled tomatoes, peppers, and seasonal salad.", "price": 420, "image": ""},
+        {"id": "192184718", "name": "Urfa Kebap", "nameEn": "Urfa kebab", "desc": "Bulgur pilavı, acılı ezme, közlenmiş domates, biber ve mevsim salata ile servis edilir.", "descEn": "Bulgur pilavı, acılı ezme, közlenmiş domates, biber ve mevsim salata ile servis edilir.", "price": 420, "image": ""},
+        {"id": "192263593", "name": "Tavuk Şiş", "nameEn": "Chicken Shish", "desc": "Bulgur pilavı, acılı ezme, közlenmiş domates, biber ve mevsim salata ile servis edilir.", "descEn": "Served with bulgur pilaf, spicy tomato dip, grilled tomatoes, peppers, and seasonal salad.", "price": 400, "image": ""},
+        {"id": "192313750", "name": "Yaprak Kanat", "nameEn": "Thin-Cut Chicken Wings", "desc": "Porsiyonda 6 adet yaprak kanat bulunur ve yanında garnitürlerle servis edilir.", "descEn": "Porsiyonda 6 adet yaprak kanat bulunur ve yanında garnitürlerle servis edilir.", "price": 420, "image": ""}
       ]
     }
   ]
