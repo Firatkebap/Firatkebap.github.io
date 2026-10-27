@@ -13,16 +13,16 @@
       "title": "Pideler",
       "titleEn": "Pides",
       "items": [
-        {"id": "194181406", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181468", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181531", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181593", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181656", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181718", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181781", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181843", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181906", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""},
-        {"id": "194181968", "name": "Yeni urun", "nameEn": "New item", "desc": "", "descEn": "", "price": 0, "image": ""}
+        {"id": "kiymali-kasarli-pide", "name": "Kıymalı Kaşarlı Pide", "nameEn": "Minced Meat and Cheese Pita", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "kiymali-pide", "name": "Kıymalı Pide", "nameEn": "Minced Meat Pita", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "kasarli-pide", "name": "Kaşarlı Pide", "nameEn": "Cheese Pita", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "kusbasi-pide", "name": "Kuşbaşılı Pide", "nameEn": "Diced Meat Pita", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "kusbasi-kasarli-pide", "name": "Kuşbaşı Kaşarlı Pide", "nameEn": "Diced Meat and Cheese Pita", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "kavurmali-yumurtali-pide", "name": "Kavurmalı Yumurtalı Pide", "nameEn": "Pita with Roasted Meat and Egg", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "kavurmali-kasarli-pide", "name": "Kavurmalı Kaşarlı Pide", "nameEn": "Pita with Roasted Meat and Cheese", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "sucuklu-yumurtali-pide", "name": "Sucuklu Yumurtalı Pide", "nameEn": "Pita with Turkish Sausage and Egg", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "sucuklu-kasarli-pide", "name": "Sucuklu Kaşarlı Pide", "nameEn": "Pita with Turkish Sausage and Cheese", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""},
+        {"id": "ozel-karisik-pide", "name": "Özel Karışık Pide", "nameEn": "Special Mixed Pita", "desc": "Acılı ezme, mevsim salata ile beraber servis edilir.", "descEn": "Served with spicy paste and seasonal salad.", "price": 1, "image": ""}
       ]
     },
     {
