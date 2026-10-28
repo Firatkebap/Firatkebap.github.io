@@ -20,7 +20,7 @@ body {
 }
 
 body {
-  font-family: Outfit, system-ui, sans-serif;
+  font-family: Outfit, "Segoe UI", "PingFang SC", "Hiragino Sans", "Yu Gothic", "Malgun Gothic", "Noto Sans CJK SC", "Noto Naskh Arabic", "Noto Sans Hebrew", "Noto Sans Armenian", sans-serif;
   color: var(--paper);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
@@ -41,30 +41,30 @@ body {
   flex: none;
 }
 
-.lang {
-  display: inline-flex;
+.lang-wrap {
+  display: block;
   margin: 0 auto 0.45rem;
+}
+
+.lang-pick {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  appearance: none;
+  background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 0.8rem center;
+  color: #fff;
   border: 1px solid var(--line);
   border-radius: 999px;
-  overflow: hidden;
-}
-
-.lang button {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: #9a9a9a;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 0.45rem 0.85rem;
+  padding: 0.45rem 2rem 0.45rem 0.95rem;
   min-height: 40px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
-.lang button.on {
-  background: #fff;
-  color: #000;
+html[dir="rtl"] .lang-pick {
+  background-position: left 0.8rem center;
+  padding: 0.45rem 0.95rem 0.45rem 2rem;
 }
 
 .kicker {
