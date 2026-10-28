@@ -4,9 +4,15 @@ const zoom = document.getElementById("zoom");
 const zoomImg = document.getElementById("zoomImg");
 
 let menuData = null;
-let lang = localStorage.getItem("fk_lang") === "en" ? "en" : "tr";
+let i18n = null;
+let lang = localStorage.getItem("fk_lang") || "tr";
 let catIndex = 0;
 let syncing = false;
+
+const FALLBACK_LANGS = [
+  { id: "tr", label: "Türkçe", dir: "ltr" },
+  { id: "en", label: "English", dir: "ltr" },
+];
 
 function money(n) {
   return Number(n).toLocaleString("tr-TR") + " ₺";
@@ -20,8 +26,34 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function langList() {
+  return (i18n && i18n.langs && i18n.langs.length ? i18n.langs : FALLBACK_LANGS);
+}
+
+function langMeta(id) {
+  return langList().find((l) => l.id === id) || null;
+}
+
+function translated(bag) {
+  if (!bag || lang === "tr") return "";
+  const value = bag[lang] || bag.en || "";
+  return String(value || "").trim();
+}
+
+function fromI18n(obj, key) {
+  if (!i18n || !obj || lang === "tr") return "";
+  if (obj === menuData) return translated(i18n.site && i18n.site[key]);
+  if (!obj.id) return "";
+  if (Array.isArray(obj.items)) return translated(i18n.sections && i18n.sections[obj.id]);
+  const row = i18n.items && i18n.items[obj.id];
+  const pack = row && (row[lang] || row.en);
+  return pack && pack[key] ? String(pack[key]).trim() : "";
+}
+
 function txt(obj, key) {
   if (!obj) return "";
+  const own = fromI18n(obj, key);
+  if (own) return own;
   if (lang === "en") {
     const en = obj[key + "En"];
     if (en && String(en).trim()) return en;
@@ -36,10 +68,23 @@ function setLine(el, text) {
 }
 
 function syncLangButtons() {
-  document.querySelectorAll(".lang button").forEach((b) => {
-    b.classList.toggle("on", b.dataset.lang === lang);
-  });
-  document.documentElement.lang = lang;
+  const sel = document.getElementById("lang");
+  if (sel && sel.value !== lang) sel.value = lang;
+  const meta = langMeta(lang);
+  document.documentElement.lang = lang === "zh-Hant" ? "zh-Hant" : lang;
+  document.documentElement.dir = meta && meta.dir === "rtl" ? "rtl" : "ltr";
+}
+
+function fillLangSelect() {
+  const sel = document.getElementById("lang");
+  if (!sel) return;
+  const langs = langList();
+  if (!langs.some((l) => l.id === lang)) lang = "tr";
+  sel.innerHTML = langs
+    .map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.label)}</option>`)
+    .join("");
+  sel.value = lang;
+  syncLangButtons();
 }
 
 function setActiveCat(i, scrollCats = true) {
@@ -74,7 +119,8 @@ function render(data) {
   setLine(document.getElementById("kicker"), txt(menuData, "kicker"));
   setLine(document.getElementById("foot"), txt(menuData, "note"));
   document.title = txt(menuData, "name") || "Menu";
-  cats.setAttribute("aria-label", lang === "en" ? "Categories" : "Kategoriler");
+  const catLabel = (i18n && i18n.ui && i18n.ui.categories && (i18n.ui.categories[lang] || (lang === "tr" ? "" : i18n.ui.categories.en))) || "";
+  cats.setAttribute("aria-label", lang === "tr" ? "Kategoriler" : catLabel || "Categories");
   syncLangButtons();
 
   cats.innerHTML = "";
@@ -124,10 +170,8 @@ function render(data) {
   requestAnimationFrame(() => goToCat(Math.min(catIndex, Math.max(0, sections.length - 1)), "auto"));
 }
 
-document.getElementById("lang").addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-lang]");
-  if (!btn) return;
-  lang = btn.dataset.lang === "en" ? "en" : "tr";
+document.getElementById("lang").addEventListener("change", (e) => {
+  lang = e.target.value || "tr";
   localStorage.setItem("fk_lang", lang);
   render();
 });
@@ -161,4 +205,18 @@ async function loadMenu() {
   }
 }
 
-loadMenu().then(render);
+async function loadI18n() {
+  try {
+    const res = await fetch("data/i18n.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+Promise.all([loadMenu(), loadI18n()]).then(([menu, dict]) => {
+  i18n = dict;
+  fillLangSelect();
+  render(menu);
+});
