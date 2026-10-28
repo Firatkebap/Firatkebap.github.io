@@ -67,6 +67,17 @@ function setLine(el, text) {
   el.textContent = t;
 }
 
+function catRank(section) {
+  const blob = ((section.title || "") + " " + (section.id || "")).toLocaleLowerCase("tr");
+  if (blob.includes("lahmacun")) return 0;
+  if (blob.includes("kebap")) return 1;
+  if (blob.includes("pide")) return 2;
+  if (blob.includes("dürüm") || blob.includes("durum")) return 3;
+  if (blob.includes("tatlı") || blob.includes("tatli")) return 4;
+  if (blob.includes("içecek") || blob.includes("icecek")) return 5;
+  return 50;
+}
+
 function langCode(id) {
   if (id === "zh-Hant") return "ZHT";
   return id.slice(0, 2).toUpperCase();
@@ -123,7 +134,7 @@ function render(data) {
   if (data) menuData = data;
   if (!menuData) return;
 
-  const sections = menuData.sections || [];
+  const sections = (menuData.sections || []).slice().sort((a, b) => catRank(a) - catRank(b));
   document.querySelector(".hero h1").textContent = txt(menuData, "name") || "Fırat Kebap";
   setLine(document.getElementById("subtitle"), txt(menuData, "subtitle"));
   setLine(document.getElementById("kicker"), txt(menuData, "kicker"));
