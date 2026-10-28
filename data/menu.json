@@ -40,10 +40,11 @@
       "title": "İçecekler",
       "titleEn": "Drinks",
       "items": [
-        {"id": "ayran", "name": "Ayran", "nameEn": "Ayran", "desc": "Ev yapımı", "descEn": "Homemade", "price": 50, "image": ""},
+        {"id": "ayran", "name": "Ayran", "nameEn": "Ayran", "desc": "33 CL", "descEn": "Homemade", "price": 50, "image": ""},
         {"id": "salgam", "name": "Şalgam", "nameEn": "Turnip juice", "desc": "Acılı / acısız", "descEn": "Spicy / mild", "price": 50, "image": ""},
         {"id": "kola", "name": "Kola / Fanta / Sprite", "nameEn": "Coke / Fanta / Sprite", "desc": "33 cl", "descEn": "33 cl", "price": 70, "image": ""},
-        {"id": "cay", "name": "Çay", "nameEn": "Tea", "desc": "İnce belli", "descEn": "Turkish tea glass", "price": 25, "image": ""}
+        {"id": "cay", "name": "Çay", "nameEn": "Tea", "desc": "İnce belli", "descEn": "Turkish tea glass", "price": 25, "image": ""},
+        {"id": "583959578", "name": "Açık Ayran ", "nameEn": "", "desc": "Yayık Ayran", "descEn": "", "price": 50, "image": ""}
       ]
     },
     {
