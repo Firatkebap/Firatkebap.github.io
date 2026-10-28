@@ -47,6 +47,8 @@ const ING_TR = {
   maydanoz: "Maydanoz",
   kapya: "Kapya biber",
   dana: "Dana eti",
+  salca: "Salça",
+  "kuyruk-yagi": "Kuyruk yağı",
 };
 
 function ingName(id) {
