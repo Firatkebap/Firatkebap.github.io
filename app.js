@@ -67,23 +67,33 @@ function setLine(el, text) {
   el.textContent = t;
 }
 
+function langCode(id) {
+  if (id === "zh-Hant") return "ZHT";
+  return id.slice(0, 2).toUpperCase();
+}
+
 function syncLangButtons() {
-  const sel = document.getElementById("lang");
-  if (sel && sel.value !== lang) sel.value = lang;
+  const box = document.getElementById("lang");
+  if (box) {
+    box.querySelectorAll("button").forEach((b) => {
+      const on = b.dataset.lang === lang;
+      b.classList.toggle("on", on);
+      if (on) b.scrollIntoView({ inline: "center", block: "nearest" });
+    });
+  }
   const meta = langMeta(lang);
   document.documentElement.lang = lang === "zh-Hant" ? "zh-Hant" : lang;
   document.documentElement.dir = meta && meta.dir === "rtl" ? "rtl" : "ltr";
 }
 
-function fillLangSelect() {
-  const sel = document.getElementById("lang");
-  if (!sel) return;
+function fillLangButtons() {
+  const box = document.getElementById("lang");
+  if (!box) return;
   const langs = langList();
   if (!langs.some((l) => l.id === lang)) lang = "tr";
-  sel.innerHTML = langs
-    .map((l) => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.label)}</option>`)
+  box.innerHTML = langs
+    .map((l) => `<button type="button" data-lang="${escapeHtml(l.id)}" title="${escapeHtml(l.label)}">${escapeHtml(langCode(l.id))}</button>`)
     .join("");
-  sel.value = lang;
   syncLangButtons();
 }
 
@@ -170,8 +180,10 @@ function render(data) {
   requestAnimationFrame(() => goToCat(Math.min(catIndex, Math.max(0, sections.length - 1)), "auto"));
 }
 
-document.getElementById("lang").addEventListener("change", (e) => {
-  lang = e.target.value || "tr";
+document.getElementById("lang").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-lang]");
+  if (!btn) return;
+  lang = btn.dataset.lang || "tr";
   localStorage.setItem("fk_lang", lang);
   render();
 });
@@ -217,6 +229,6 @@ async function loadI18n() {
 
 Promise.all([loadMenu(), loadI18n()]).then(([menu, dict]) => {
   i18n = dict;
-  fillLangSelect();
+  fillLangButtons();
   render(menu);
 });
