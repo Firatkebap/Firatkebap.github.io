@@ -14,6 +14,54 @@ const FALLBACK_LANGS = [
   { id: "en", label: "English", dir: "ltr" },
 ];
 
+function ingParts(item) {
+  const raw = String((item && item.ings) || "").trim();
+  if (!raw) return [];
+  const out = [];
+  for (const bit of raw.split(",")) {
+    const cut = bit.indexOf(":");
+    if (cut <= 0) continue;
+    const id = bit.slice(0, cut).trim();
+    const pct = Number(bit.slice(cut + 1));
+    if (!id || !pct) continue;
+    out.push({ id, pct });
+  }
+  return out;
+}
+
+const ING_TR = {
+  sogan: "Soğan",
+  domates: "Domates",
+  patlican: "Patlıcan",
+  biber: "Biber",
+  isot: "İsot",
+  "pul-biber": "Pul biber",
+  "sivi-yag": "Sıvı yağ",
+  kiyma: "Kıyma (dana etinden)",
+  kuzu: "Kuzu eti",
+  bulgur: "Bulgur",
+  tuz: "Tuz",
+  sucuk: "Sucuk",
+  kasar: "Kaşar",
+  yogurt: "Yoğurt",
+  maydanoz: "Maydanoz",
+  kapya: "Kapya biber",
+  dana: "Dana eti",
+};
+
+function ingName(id) {
+  if (lang === "tr") return ING_TR[id] || id;
+  const bag = i18n && i18n.ings && i18n.ings[id];
+  const value = bag && (bag[lang] || bag.en);
+  return (value && String(value).trim()) || ING_TR[id] || id;
+}
+
+function ingHeading() {
+  if (lang === "tr") return "İçindekiler";
+  const bag = i18n && i18n.ui && i18n.ui.ingredients;
+  return (bag && (bag[lang] || bag.en)) || "Ingredients";
+}
+
 function money(n) {
   return Number(n).toLocaleString("tr-TR") + " ₺";
 }
@@ -179,6 +227,7 @@ function render(data) {
             <span class="price">${money(item.price)}</span>
           </div>
           <p>${escapeHtml(desc)}</p>
+          ${ingParts(item).length ? `<div class="ings" aria-label="${escapeHtml(ingHeading())}">${ingParts(item).map((p) => `<span>${escapeHtml(ingName(p.id))} <b>%${p.pct}</b></span>`).join("")}</div>` : ""}
         </div>
       `;
       inner.appendChild(row);
